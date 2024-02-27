@@ -340,6 +340,29 @@ class DigitalOceanApiService {
 		return rtn
 	}
 
+	/**
+	 * Retrieves a list of VPCs from the DigitalOcean API.
+	 *
+	 * @param apiKey The API key used to authenticate the request.
+	 * @param dataCenter The data center (region) for which to fetch VPCs.
+	 * @return A ServiceResponse object containing the list of VPCs or an error message.
+	 */
+	ServiceResponse listVpcs(String apiKey, String dataCenter) {
+		ServiceResponse rtn = ServiceResponse.prepare()
+		String apiPath = "/v2/vpcs"
+		def regionMap = [region: dataCenter]
+		ServiceResponse response = internalPaginatedGetApiRequest(apiKey, apiPath, "vpcs", regionMap)
+		if(response.success) {
+			rtn.success = true
+			rtn.data = response.data.vpcs
+			rtn.results = response.data
+		} else {
+			rtn.errorCode = response.errorCode
+			rtn.results = response.data
+		}
+		return rtn
+	}
+
 	private ServiceResponse internalGetApiRequest(String apiKey, String path, Map queryParams=null, Map headers=null) {
 		internalApiRequest(apiKey, path, 'GET', null, queryParams, headers)
 	}

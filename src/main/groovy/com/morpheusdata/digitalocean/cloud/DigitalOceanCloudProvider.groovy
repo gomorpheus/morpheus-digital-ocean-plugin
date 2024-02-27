@@ -67,7 +67,7 @@ class DigitalOceanCloudProvider implements CloudProvider {
 
 	@Override
 	Boolean hasComputeZonePools() {
-		return false
+		return true
 	}
 
 	@Override
@@ -152,6 +152,20 @@ class DigitalOceanCloudProvider implements CloudProvider {
 				required: true,
 				inputType: OptionType.InputType.SELECT,
 				dependsOn: 'config.username, config.apiKey, credential.type, credential.username, credential.password',
+				fieldContext: 'config'
+		)
+		options << new OptionType(
+				name: 'VPC',
+				code: 'zoneType.digitalocean.vpc',
+				fieldName: 'vpc',
+				optionSourceType: 'digitalOcean',
+				optionSource: 'digitalOceanVpc',
+				displayOrder: 40,
+				fieldCode: 'gomorpheus.optiontype.Vpc',
+				fieldLabel: 'VPC',
+				required: true,
+				inputType: OptionType.InputType.SELECT,
+				dependsOn: 'config.datacenter',
 				fieldContext: 'config'
 		)
 		return options

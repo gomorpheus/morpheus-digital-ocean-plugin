@@ -354,6 +354,24 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 		return false
 	}
 
+	/**
+	 * Determines if this provision type has resources pools that can be selected or not.
+	 * @return Boolean representation of whether or not this provision type has resource pools
+	 */
+	@Override
+	Boolean hasComputeZonePools() {
+		return true
+	}
+
+	/**
+	 * Indicates if a ComputeZonePool is required during provisioning
+	 * @return Boolean
+	 */
+	@Override
+	Boolean computeZonePoolRequired() {
+		return true
+	}
+
 	@Override
 	ServiceResponse validateWorkload(Map opts) {
 		log.debug("validateWorkload: ${opts}")
