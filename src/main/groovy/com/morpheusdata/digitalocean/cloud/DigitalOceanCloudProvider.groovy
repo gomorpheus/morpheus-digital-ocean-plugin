@@ -15,7 +15,6 @@ import com.morpheusdata.request.ValidateCloudRequest
 import com.morpheusdata.response.ServiceResponse
 import groovy.util.logging.Slf4j
 
-
 @Slf4j
 class DigitalOceanCloudProvider implements CloudProvider {
 	DigitalOceanPlugin plugin
