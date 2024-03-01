@@ -10,6 +10,7 @@ import com.morpheusdata.core.providers.CloudProvider
 import com.morpheusdata.core.MorpheusContext
 import com.morpheusdata.core.Plugin
 import com.morpheusdata.core.providers.ProvisionProvider
+import com.morpheusdata.digitalocean.cloud.sync.VPCSync
 import com.morpheusdata.model.*
 import com.morpheusdata.request.ValidateCloudRequest
 import com.morpheusdata.response.ServiceResponse
@@ -370,6 +371,7 @@ class DigitalOceanCloudProvider implements CloudProvider {
 			(new DatacentersSync(plugin, cloud, apiService)).execute()
 			(new SizesSync(plugin, cloud, apiService)).execute()
 			(new ImagesSync(plugin, cloud, apiService, false)).execute()
+			(new VPCSync(plugin, cloud, apiService)).execute()
 		} else {
 			if(testResult.data.invalidLogin) {
 				morpheusContext.cloud.updateZoneStatus(cloud, Cloud.Status.offline, 'Error refreshing cloud: invalid credentials', syncDate)
@@ -387,6 +389,7 @@ class DigitalOceanCloudProvider implements CloudProvider {
 		(new DatacentersSync(plugin, cloudInfo, null)).clean()
 		(new SizesSync(plugin, cloudInfo, null)).clean()
 		(new ImagesSync(plugin, cloudInfo, null)).clean()
+//		(new VPCSync(plugin, cloudInfo, null)).clean()
 		return new ServiceResponse(success: true)
 	}
 
