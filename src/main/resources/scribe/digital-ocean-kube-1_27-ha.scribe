@@ -138,7 +138,7 @@ resource "compute-type-layout" "kubernetes-1_27-ubuntu-20_04-digitalocean-amd64"
   specTemplates = []
   packages = [
     "kubernetes-calico-3-26-0-package",
-    "kubernetes-rook-1-12-package",
+    "kubernetes-rook-1-13-package",
     "kubernetes-fluentbit-1-8-9-1-modified-package",
     "kubernetes-prometheus-0-9-modified-package",
     "kubernetes-nginx-ingress-operator-1-9-4-package"
