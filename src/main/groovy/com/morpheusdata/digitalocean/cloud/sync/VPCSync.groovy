@@ -35,31 +35,24 @@ class VPCSync {
     def execute() {
         log.info("BEGIN: execute ClustersSync: ${cloud.id}")
         try {
-//            def authConfig = plugin.getAuthConfig(cloud)
             String apiKey = plugin.getAuthConfig(cloud).doApiKey
             String datacenter = cloud.configMap.datacenter
-//            def listResults = NutanixPrismComputeUtility.listClusters(apiClient, authConfig)
             def vpcs = apiService.listVpcs(apiKey, datacenter)
             def vpcMap =  vpcs.data as Collection<Map>
             log.info("Anant VPC data as Map : ${vpcMap}")
             if(vpcs.success) {
-//                def masterHosts = listResults?.data?.findAll { cloudItem ->
-//                    cloudItem.status?.resources?.config?.service_list?.contains('AOS')
-//                } ?: []
                 Observable<CloudPoolIdentity> domainRecords = morpheusContext.async.cloud.pool.listIdentityProjections(cloud.id, null, datacenter)
-//                Observable<ComputeZonePoolIdentityProjection> domainRecords = morpheusContext.cloud.pool.listSyncProjections(cloud.id, "nutanix.prism.cluster.${cloud.id}")
                 SyncTask<CloudPoolIdentity, Map, CloudPool> syncTask = new SyncTask<>(domainRecords, vpcs.data as Collection<Map>)
                 log.info("RAZI VPC DATA: ${vpcs.data}")
-//                SyncTask<ComputeZonePoolIdentityProjection, Map, ComputeZonePool> syncTask = new SyncTask<>(domainRecords, masterHosts)
                 syncTask.addMatchFunction { CloudPoolIdentity domainObject, Map apiItem ->
                     domainObject.externalId == apiItem.id
                 }.onDelete { removeItems ->
                     removeMissingResourcePools(removeItems)
                 }.onUpdate { List<SyncTask.UpdateItem<CloudPool, Map>> updateItems ->
-                    updateMatchedResourcePools(updateItems)
+                    updateMatchedVpcs(updateItems, datacenter)
                 }.onAdd { itemsToAdd ->
                     log.info("Anant Items to add: ${itemsToAdd}")
-                    addMissingResourcePools(itemsToAdd)
+                    addMissingVpcs(itemsToAdd, datacenter)
                 }.withLoadObjectDetails { List<SyncTask.UpdateItemDto<CloudPoolIdentity, Map>> updateItems ->
                     Map<Long, SyncTask.UpdateItemDto<CloudPoolIdentity, Map>> updateItemMap = updateItems.collectEntries { [(it.existingItem.id): it]}
                     morpheusContext.async.cloud.pool.listById(updateItems.collect { it.existingItem.id } as List<Long>).map {CloudPool cloudPool ->
@@ -74,7 +67,7 @@ class VPCSync {
         log.info("END: execute ClustersSync: ${cloud.id}")
     }
 
-    def addMissingResourcePools(Collection<Map> addList) {
+    def addMissingVpcs(Collection<Map> addList, String region) {
         def adds = []
 
         log.info("RAZI ADD LIST: ${addList}")
@@ -82,15 +75,16 @@ class VPCSync {
         for(Map cloudItem in addList) {
             //def clusterData = cloudItem.status
             def poolConfig = [
-                    owner     : cloud.owner,
-                    type       :'vpc',
+                    owner     : [id:cloud.owner.id],
+                    type      : 'vpc',
                     name      : cloudItem.name,
                     externalId: cloudItem.id,
                     uniqueId  : cloudItem.id,
                     internalId: cloudItem.name,
                     refType   : 'ComputeZone',
                     refId     : cloud.id,
-                    cloud     : cloud,
+                    regionCode: region,
+                    cloud     : [id:cloud.id],
                     category  : "digitalocean.${cloud.id}.vpc",
                     code      : "digitalocean.${cloud.id}.vpc.${cloudItem.id}",
                     readOnly  : true
@@ -106,17 +100,24 @@ class VPCSync {
         }
     }
 
-    private updateMatchedResourcePools(List updateList) {
-        log.debug "updateMatchedResourcePools: ${cloud} ${updateList.size()}"
+    private updateMatchedVpcs(List<SyncTask.UpdateItem<CloudPool, Map>> updateList, String region) {
+        log.info "RAZI updateMatchedVpcs: ${cloud} ${updateList.size()}"
         def updates = []
 
         for(update in updateList) {
-            def matchItem = update.masterItem
+            def masterItem = update.masterItem
             def existing = update.existingItem
             Boolean save = false
-
-            if(existing.name != matchItem.status.name) {
-                existing.name = matchItem.status.name
+            log.info("RAZI EXISTING: ${existing.name}")
+            log.info("RAZI MASTER: ${masterItem.name}")
+            log.info("RAZI CLOUD REGION: ${existing.regionCode}")
+            log.info("RAZI REGION: ${region}")
+            if(existing.name != masterItem.name) {
+                existing.name = masterItem.name
+                save = true
+            }
+            if(region && existing.regionCode != region) {
+                existing.regionCode = region
                 save = true
             }
             if(save) {
