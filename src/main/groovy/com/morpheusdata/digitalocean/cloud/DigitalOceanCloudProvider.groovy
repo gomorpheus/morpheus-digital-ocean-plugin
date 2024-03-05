@@ -342,7 +342,11 @@ class DigitalOceanCloudProvider implements CloudProvider {
 		String apiKey = plugin.getAuthConfig(cloud).doApiKey
 		ServiceResponse testResult = apiService.testConnection(apiKey)
 		if(testResult.success) {
+//			(new ImagesSync(plugin, cloud, apiService, true)).execute()
+			(new DatacentersSync(plugin, cloud, apiService)).execute()
+			(new SizesSync(plugin, cloud, apiService)).execute()
 			(new ImagesSync(plugin, cloud, apiService, true)).execute()
+			(new VPCSync(plugin, cloud, apiService)).execute()
 			rtn.success = true
 		} else {
 			if(testResult.data.invalidLogin) {
@@ -389,7 +393,6 @@ class DigitalOceanCloudProvider implements CloudProvider {
 		(new DatacentersSync(plugin, cloudInfo, null)).clean()
 		(new SizesSync(plugin, cloudInfo, null)).clean()
 		(new ImagesSync(plugin, cloudInfo, null)).clean()
-//		(new VPCSync(plugin, cloudInfo, null)).clean()
 		return new ServiceResponse(success: true)
 	}
 
