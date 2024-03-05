@@ -88,8 +88,7 @@ class VPCSync {
                     regionCode: region,
                     cloud     : [id:cloud.id],
                     category  : "digitalocean.${cloud.id}.vpc",
-                    code      : "digitalocean.${cloud.id}.vpc.${cloudItem.id}",
-                    readOnly  : true
+                    code      : "digitalocean.${cloud.id}.vpc.${cloudItem.id}"
             ]
             log.info("RAZI POOL CONFIG: ${poolConfig}")
 
