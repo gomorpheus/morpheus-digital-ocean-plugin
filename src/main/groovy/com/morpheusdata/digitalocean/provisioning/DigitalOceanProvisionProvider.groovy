@@ -11,6 +11,7 @@ import com.morpheusdata.core.AbstractProvisionProvider
 import com.morpheusdata.core.MorpheusContext
 import com.morpheusdata.core.Plugin
 import com.morpheusdata.model.BackupResult
+import com.morpheusdata.model.CloudPool
 import com.morpheusdata.model.ComputeServer
 import com.morpheusdata.model.ComputeServerInterfaceType
 import com.morpheusdata.model.ComputeTypeLayout
@@ -400,6 +401,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 		def containerConfig = new groovy.json.JsonSlurper().parseText(workload.configs ?: '{}')
 		ComputeServer server = workload.server
 		Cloud cloud = server?.cloud
+		CloudPool cloudPool = server?.resourcePool
 
 		String apiKey = plugin.getAuthConfig(cloud).doApiKey
 		if (!apiKey) {
@@ -463,7 +465,8 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 			'image'             : imageId,
 			'backups'           : "${opts.doBackups == true}",
 			'ipv6'              : "${opts.ipv6 == true}",
-			'user_data'         : userData
+			'user_data'         : userData,
+			'vpc_uuid'			: cloudPool.externalId
 		]
 
 		// Add ssh keys provided by morpheus core services, e.g. Account or User ssh keys
