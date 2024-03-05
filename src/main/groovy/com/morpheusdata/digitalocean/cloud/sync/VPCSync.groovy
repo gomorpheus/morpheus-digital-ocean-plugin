@@ -78,6 +78,8 @@ class VPCSync {
                     owner     : [id:cloud.owner.id],
                     type      : 'vpc',
                     name      : cloudItem.name,
+                    displayName:"${cloudItem.name} (${region})",
+                    description:"${cloudItem.name} - ${cloudItem.id}",
                     externalId: cloudItem.id,
                     uniqueId  : cloudItem.id,
                     internalId: cloudItem.name,
