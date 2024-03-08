@@ -43,7 +43,7 @@ class DigitalOceanOptionSourceProvider implements OptionSourceProvider {
 
 	@Override
 	List<String> getMethodNames() {
-		return new ArrayList<String>(['digitalOceanDataCenters', 'digitalOceanImage'])
+		return new ArrayList<String>(['digitalOceanImage'])
 	}
 
 	def digitalOceanImage(args) {
