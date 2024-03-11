@@ -22,18 +22,19 @@ class DatacenterDatasetProvider extends AbstractDatasetProvider<ReferenceData, S
 	public static final providerKey = 'digitalOceanDataCenters'
 	public static final providerDescription = 'Get available datacenters from DigitalOcean'
 
-	static {
-		datasetInfo = new DatasetInfo(
+	DatacenterDatasetProvider(DigitalOceanPlugin plugin, MorpheusContext morpheus) {
+		this.plugin = plugin
+		this.morpheusContext = morpheus
+	}
+
+	@Override
+	DatasetInfo getInfo() {
+		return new DatasetInfo(
 			name: providerName,
 			namespace: providerNamespace,
 			key: providerKey,
 			description: providerDescription
 		)
-	}
-
-	DatacenterDatasetProvider(DigitalOceanPlugin plugin, MorpheusContext morpheus) {
-		this.plugin = plugin
-		this.morpheusContext = morpheus
 	}
 
 	@Override
