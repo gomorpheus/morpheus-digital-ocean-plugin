@@ -129,14 +129,18 @@ class DigitalOceanOptionSourceProvider implements OptionSourceProvider {
 		// if we know the cloud then load from cached data
 		if(cloudId) {
 			cloud = morpheus.services.cloud.get(cloudId)
-			morpheus.services.referenceData.list(new DataQuery().withFilter("category", "digitalocean.${cloudId}.vpc")).each { ReferenceDataSyncProjection refData ->
+			morpheus.services.referenceData.list(new DataQuery().withFilter("category", "digitalocean.${cloudId}.vpc"))
+					.each { ReferenceDataSyncProjection refData ->
 				vpcs << [name: refData.name, value: refData.externalId]
 			}
 		}
 
 		// check if auth config has changed and force a refresh of the VPCs
+		def cloudApiKey = null;
+		def cloudDatacenter = null;
 		if(cloud) {
-			def cloudApiKey = plugin.getAuthConfig(cloud).doApiKey
+			cloudApiKey = plugin.getAuthConfig(cloud).doApiKey
+			cloudDatacenter = cloud.configMap.datacenter
 			log.debug("api key: ${cloudApiKey} vs ${paramsApiKey}")
 			if(cloudApiKey != paramsApiKey && paramsApiKey?.startsWith("******") == false) {
 				log.debug("API key has changed, clearing cached VPCs")
@@ -149,9 +153,16 @@ class DigitalOceanOptionSourceProvider implements OptionSourceProvider {
 			log.debug("VPCs not cached, loading from API")
 			DigitalOceanApiService apiService = new DigitalOceanApiService()
 
-
 			if(paramsApiKey) {
 				ServiceResponse response = apiService.listVpcs(paramsApiKey, datacenter)
+				if(response.success) {
+					vpcs = []
+					response.data.each {
+						vpcs << [name: "${it.name}", value: "${it.id}"]
+					}
+				}
+			} else if(cloudApiKey) {
+				ServiceResponse response = apiService.listVpcs(cloudApiKey, cloudDatacenter)
 				if(response.success) {
 					vpcs = []
 					response.data.each {
@@ -177,4 +188,5 @@ class DigitalOceanOptionSourceProvider implements OptionSourceProvider {
 
 		return rtn
 	}
+
 }
