@@ -22,7 +22,7 @@ resource "workload-type" "kubernetes-ubuntu-22_04-digitalocean-amd64" {
   scripts          = [
     "setup-disks-v1", "kube-ubuntu-22-setup-script-v1", "kube-adm-master-setup-script-v1", "kubernetes-ectd-encrypt-install-master-script-v1"
   ]
-  templates = ["do-kubeadm-cluster-master-init","kubernetes-etcd-encrypt-install-master","replace-external-ip"]
+  templates = ["do-kubeadm-cluster-master-init","kubernetes-etcd-encrypt-install-master","replace-external-ip", "k8-cypher"]
 }
 
 # worker vm
