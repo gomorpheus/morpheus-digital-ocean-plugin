@@ -129,9 +129,10 @@ class DigitalOceanOptionSourceProvider implements OptionSourceProvider {
 		// if we know the cloud then load from cached data
 		if(cloudId) {
 			cloud = morpheus.services.cloud.get(cloudId)
-			morpheus.services.referenceData.list(new DataQuery().withFilter("category", "digitalocean.${cloudId}.vpc")).each { ReferenceDataSyncProjection refData ->
-				vpcs << [name: refData.name, value: refData.externalId]
-			}
+			morpheus.services.cloud.pool.list(new DataQuery().withFilter("category", "digitalocean.${cloudId}.vpc"))
+					.each { CloudPool refData ->
+						vpcs << [name: refData.name, value: refData.externalId]
+					}
 		}
 
 		// check if auth config has changed and force a refresh of the VPCs
@@ -148,7 +149,6 @@ class DigitalOceanOptionSourceProvider implements OptionSourceProvider {
 		if(vpcs.size() == 0) {
 			log.debug("VPCs not cached, loading from API")
 			DigitalOceanApiService apiService = new DigitalOceanApiService()
-
 
 			if(paramsApiKey) {
 				ServiceResponse response = apiService.listVpcs(paramsApiKey, datacenter)
@@ -177,4 +177,5 @@ class DigitalOceanOptionSourceProvider implements OptionSourceProvider {
 
 		return rtn
 	}
+
 }
