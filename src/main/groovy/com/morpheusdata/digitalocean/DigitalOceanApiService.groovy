@@ -457,4 +457,28 @@ class DigitalOceanApiService {
 		}
 		return rtn
 	}
+
+	ServiceResponse getAllDropletsForDataCenter(String apiKey, String datacenter, String vpc) {
+		ServiceResponse rtn = ServiceResponse.prepare()
+		String apiPath = "/v2/droplets"
+		ServiceResponse response = internalGetApiRequest(apiKey, apiPath)
+		log.debug("getAllDropletsForDataCenter response: ${response}")
+		if (response.success) {
+			rtn.success = true
+			List droplets = response.data?.droplets
+			List filteredDroplets = []
+			for(droplet in droplets) {
+				if (droplet && (vpc ? droplet.region.slug == datacenter && droplet.vpc_uuid==vpc : droplet.region.slug == datacenter)){
+					filteredDroplets << droplet
+				}
+			}
+			rtn.data = filteredDroplets
+			rtn.results = response.data
+		} else {
+			rtn.success = false
+			rtn.errorCode = response.errorCode
+			rtn.results = response.data
+		}
+		return rtn
+	}
 }
