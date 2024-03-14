@@ -14,6 +14,7 @@ import com.morpheusdata.model.BackupResult
 import com.morpheusdata.model.CloudPool
 import com.morpheusdata.model.ComputeServer
 import com.morpheusdata.model.ComputeServerInterfaceType
+import com.morpheusdata.model.ComputeServerType
 import com.morpheusdata.model.ComputeTypeLayout
 import com.morpheusdata.model.ComputeTypeSet
 import com.morpheusdata.model.HostType
@@ -496,6 +497,13 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 			server.osDevice = '/dev/vda'
 			server.dataDevice = '/dev/vda'
 			server.lvmEnabled = false
+
+			server.uniqueId = externalId
+			server.category = "digitalocean.vm.${cloud.id}"
+			if (!server.computeServerType) {
+				server.computeServerType = getAllComputeServerTypes(cloud.id)['digitalOceanVm']
+			}
+
 			server = saveAndGet(server)
 
 			return new ServiceResponse<ProvisionResponse>(success: true, data: provisionResponse)
@@ -586,7 +594,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 		if (!apiKey) {
 			return new ServiceResponse(success: false, msg: 'No API Key provided')
 		}
-		
+
 		// sshKeys needed?
 		// opts.sshKeys = getKeyList(server.cloud, config.publicKeyId)
 
@@ -896,5 +904,9 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 		}
 
 		return rtn
+	}
+
+	private Map<String, ComputeServerType> getAllComputeServerTypes() {
+		def computeServerTypes = morpheusContext.async.cloud.getComputeServerTypes(cloud.id).blockingGet().collectEntries { [it.code, it] }
 	}
 }
