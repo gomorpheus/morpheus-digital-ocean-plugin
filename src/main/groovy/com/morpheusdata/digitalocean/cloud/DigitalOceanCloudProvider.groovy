@@ -10,6 +10,8 @@ import com.morpheusdata.core.providers.CloudProvider
 import com.morpheusdata.core.MorpheusContext
 import com.morpheusdata.core.Plugin
 import com.morpheusdata.core.providers.ProvisionProvider
+import com.morpheusdata.digitalocean.cloud.sync.VPCSync
+import com.morpheusdata.digitalocean.cloud.sync.VirtualMachineSync
 import com.morpheusdata.model.*
 import com.morpheusdata.request.ValidateCloudRequest
 import com.morpheusdata.response.ServiceResponse
@@ -67,7 +69,7 @@ class DigitalOceanCloudProvider implements CloudProvider {
 
 	@Override
 	Boolean hasComputeZonePools() {
-		return false
+		return true
 	}
 
 	@Override
@@ -152,6 +154,31 @@ class DigitalOceanCloudProvider implements CloudProvider {
 				required: true,
 				inputType: OptionType.InputType.SELECT,
 				dependsOn: 'config.username, config.apiKey, credential.type, credential.username, credential.password',
+				fieldContext: 'config'
+		)
+		options << new OptionType(
+				name: 'VPC',
+				code: 'zoneType.digitalocean.vpc',
+				fieldName: 'vpc',
+				optionSourceType: 'digitalOcean',
+				optionSource: 'digitalOceanVpc',
+				displayOrder: 40,
+				fieldCode: 'gomorpheus.optiontype.Vpc',
+				fieldLabel: 'VPC',
+				required: true,
+				inputType: OptionType.InputType.SELECT,
+				dependsOn: 'config.datacenter',
+				fieldContext: 'config'
+		)
+
+		options << new OptionType(
+				name: 'Inventory Existing Instances',
+				code: 'digitalocean-import-existing',
+				fieldName: 'importExisting',
+				displayOrder: 90,
+				fieldLabel: 'Inventory Existing Instances',
+				required: false,
+				inputType: OptionType.InputType.CHECKBOX,
 				fieldContext: 'config'
 		)
 		return options
@@ -327,7 +354,12 @@ class DigitalOceanCloudProvider implements CloudProvider {
 		String apiKey = plugin.getAuthConfig(cloud).doApiKey
 		ServiceResponse testResult = apiService.testConnection(apiKey)
 		if(testResult.success) {
+//			(new ImagesSync(plugin, cloud, apiService, true)).execute()
+			(new DatacentersSync(plugin, cloud, apiService)).execute()
+			(new SizesSync(plugin, cloud, apiService)).execute()
 			(new ImagesSync(plugin, cloud, apiService, true)).execute()
+			(new VPCSync(plugin, cloud, apiService)).execute()
+			new VirtualMachineSync(plugin, cloud, apiService, this).execute()
 			rtn.success = true
 		} else {
 			if(testResult.data.invalidLogin) {
@@ -356,6 +388,8 @@ class DigitalOceanCloudProvider implements CloudProvider {
 			(new DatacentersSync(plugin, cloud, apiService)).execute()
 			(new SizesSync(plugin, cloud, apiService)).execute()
 			(new ImagesSync(plugin, cloud, apiService, false)).execute()
+			(new VPCSync(plugin, cloud, apiService)).execute()
+			new VirtualMachineSync(plugin, cloud, apiService, this).execute()
 		} else {
 			if(testResult.data.invalidLogin) {
 				morpheusContext.cloud.updateZoneStatus(cloud, Cloud.Status.offline, 'Error refreshing cloud: invalid credentials', syncDate)

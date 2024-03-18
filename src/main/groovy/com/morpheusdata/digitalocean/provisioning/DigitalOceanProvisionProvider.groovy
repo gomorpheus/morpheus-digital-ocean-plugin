@@ -11,8 +11,10 @@ import com.morpheusdata.core.AbstractProvisionProvider
 import com.morpheusdata.core.MorpheusContext
 import com.morpheusdata.core.Plugin
 import com.morpheusdata.model.BackupResult
+import com.morpheusdata.model.CloudPool
 import com.morpheusdata.model.ComputeServer
 import com.morpheusdata.model.ComputeServerInterfaceType
+import com.morpheusdata.model.ComputeServerType
 import com.morpheusdata.model.ComputeTypeLayout
 import com.morpheusdata.model.ComputeTypeSet
 import com.morpheusdata.model.HostType
@@ -354,6 +356,24 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 		return false
 	}
 
+	/**
+	 * Determines if this provision type has resources pools that can be selected or not.
+	 * @return Boolean representation of whether or not this provision type has resource pools
+	 */
+	@Override
+	Boolean hasComputeZonePools() {
+		return true
+	}
+
+	/**
+	 * Indicates if a ComputeZonePool is required during provisioning
+	 * @return Boolean
+	 */
+	@Override
+	Boolean computeZonePoolRequired() {
+		return true
+	}
+
 	@Override
 	ServiceResponse validateWorkload(Map opts) {
 		log.debug("validateWorkload: ${opts}")
@@ -382,6 +402,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 		def containerConfig = new groovy.json.JsonSlurper().parseText(workload.configs ?: '{}')
 		ComputeServer server = workload.server
 		Cloud cloud = server?.cloud
+		CloudPool cloudPool = server?.resourcePool
 
 		String apiKey = plugin.getAuthConfig(cloud).doApiKey
 		if (!apiKey) {
@@ -445,7 +466,8 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 			'image'             : imageId,
 			'backups'           : "${opts.doBackups == true}",
 			'ipv6'              : "${opts.ipv6 == true}",
-			'user_data'         : userData
+			'user_data'         : userData,
+			'vpc_uuid'			: cloudPool.externalId
 		]
 
 		// Add ssh keys provided by morpheus core services, e.g. Account or User ssh keys
@@ -475,6 +497,13 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 			server.osDevice = '/dev/vda'
 			server.dataDevice = '/dev/vda'
 			server.lvmEnabled = false
+
+			server.uniqueId = externalId
+			server.category = "digitalocean.vm.${cloud.id}"
+			if (!server.computeServerType) {
+				server.computeServerType = getAllComputeServerTypes(cloud.id)['digitalOceanVm']
+			}
+
 			server = saveAndGet(server)
 
 			return new ServiceResponse<ProvisionResponse>(success: true, data: provisionResponse)
@@ -565,7 +594,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 		if (!apiKey) {
 			return new ServiceResponse(success: false, msg: 'No API Key provided')
 		}
-		
+
 		// sshKeys needed?
 		// opts.sshKeys = getKeyList(server.cloud, config.publicKeyId)
 
@@ -875,5 +904,9 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 		}
 
 		return rtn
+	}
+
+	private Map<String, ComputeServerType> getAllComputeServerTypes() {
+		def computeServerTypes = morpheusContext.async.cloud.getComputeServerTypes(cloud.id).blockingGet().collectEntries { [it.code, it] }
 	}
 }
