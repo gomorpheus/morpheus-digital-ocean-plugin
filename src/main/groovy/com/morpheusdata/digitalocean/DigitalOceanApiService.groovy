@@ -340,29 +340,6 @@ class DigitalOceanApiService {
 		return rtn
 	}
 
-	/**
-	 * Retrieves a list of VPCs from the DigitalOcean API.
-	 *
-	 * @param apiKey The API key used to authenticate the request.
-	 * @param dataCenter The data center (region) for which to fetch VPCs.
-	 * @return A ServiceResponse object containing the list of VPCs or an error message.
-	 */
-	ServiceResponse listVpcs(String apiKey, String dataCenter) {
-		ServiceResponse rtn = ServiceResponse.prepare()
-		String apiPath = "/v2/vpcs"
-		def regionMap = [region: dataCenter]
-		ServiceResponse response = internalPaginatedGetApiRequest(apiKey, apiPath, "vpcs", regionMap)
-		if(response.success) {
-			rtn.success = true
-			rtn.data = response.data.vpcs
-			rtn.results = response.data
-		} else {
-			rtn.errorCode = response.errorCode
-			rtn.results = response.data
-		}
-		return rtn
-	}
-
 	private ServiceResponse internalGetApiRequest(String apiKey, String path, Map queryParams=null, Map headers=null) {
 		internalApiRequest(apiKey, path, 'GET', null, queryParams, headers)
 	}
@@ -454,30 +431,6 @@ class DigitalOceanApiService {
 
 		} catch(e) {
 			log.error("error during api request {}: {}", path, e, e)
-		}
-		return rtn
-	}
-
-	ServiceResponse getAllDropletsForDataCenter(String apiKey, String datacenter, String vpc) {
-		ServiceResponse rtn = ServiceResponse.prepare()
-		String apiPath = "/v2/droplets"
-		ServiceResponse response = internalGetApiRequest(apiKey, apiPath)
-		log.debug("getAllDropletsForDataCenter response: ${response}")
-		if (response.success) {
-			rtn.success = true
-			List droplets = response.data?.droplets
-			List filteredDroplets = []
-			for(droplet in droplets) {
-				if (droplet && (vpc ? droplet.region.slug == datacenter && droplet.vpc_uuid==vpc : droplet.region.slug == datacenter)){
-					filteredDroplets << droplet
-				}
-			}
-			rtn.data = filteredDroplets
-			rtn.results = response.data
-		} else {
-			rtn.success = false
-			rtn.errorCode = response.errorCode
-			rtn.results = response.data
 		}
 		return rtn
 	}
