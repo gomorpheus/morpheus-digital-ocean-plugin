@@ -354,7 +354,6 @@ class DigitalOceanCloudProvider implements CloudProvider {
 		String apiKey = plugin.getAuthConfig(cloud).doApiKey
 		ServiceResponse testResult = apiService.testConnection(apiKey)
 		if(testResult.success) {
-//			(new ImagesSync(plugin, cloud, apiService, true)).execute()
 			(new DatacentersSync(plugin, cloud, apiService)).execute()
 			(new SizesSync(plugin, cloud, apiService)).execute()
 			(new ImagesSync(plugin, cloud, apiService, true)).execute()

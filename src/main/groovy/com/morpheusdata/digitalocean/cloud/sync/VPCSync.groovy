@@ -6,17 +6,9 @@ import com.morpheusdata.digitalocean.DigitalOceanApiService
 import com.morpheusdata.digitalocean.DigitalOceanPlugin
 import com.morpheusdata.model.Cloud
 import com.morpheusdata.model.CloudPool
-import com.morpheusdata.model.ComputeZonePool
-import com.morpheusdata.model.ReferenceData
-import com.morpheusdata.model.ServicePlan
 import com.morpheusdata.model.projection.CloudPoolIdentity
-import com.morpheusdata.model.projection.ComputeZonePoolIdentityProjection
-import com.morpheusdata.model.projection.ReferenceDataSyncProjection
-import com.morpheusdata.response.ServiceResponse
 import groovy.util.logging.Slf4j
 import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.core.Single
-
 /**
  * Sync class for syncing VPCs within an DigitalOcean Cloud account
  * This sync system first iterates over a list of VPCs for a particular datacenter using apiKey
@@ -48,7 +40,14 @@ class VPCSync {
         try {
             String apiKey = plugin.getAuthConfig(cloud).doApiKey
             String datacenter = cloud.configMap.datacenter
+            String vpcId = cloud.configMap.vpc
+
             def vpcs = apiService.listVpcs(apiKey, datacenter)
+            if (vpcId && !vpcId.trim().isEmpty()) {
+                def vpcData = vpcs.data.find { vpc -> vpc.id == vpcId }
+                vpcs.data = vpcData ? [vpcData] : []
+            }
+
             if(vpcs.success) {
                 Observable<CloudPoolIdentity> domainRecords = morpheusContext.async.cloud.pool.listIdentityProjections(cloud.id, null, datacenter)
                 SyncTask<CloudPoolIdentity, Map, CloudPool> syncTask = new SyncTask<>(domainRecords, vpcs.data as Collection<Map>)
@@ -72,6 +71,7 @@ class VPCSync {
             log.error("VPCSync error: {}", ex)
         }
     }
+
 
     /**
      * Adds missing virtual private clouds (VPCs) based on the provided list and region.
