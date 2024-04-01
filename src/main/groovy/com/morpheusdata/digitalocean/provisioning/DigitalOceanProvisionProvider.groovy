@@ -837,13 +837,8 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 		def privateIp = privateNetwork?.ip_address ?: publicIp
 		provisionResponse.publicIp = publicIp
 		provisionResponse.privateIp = privateIp
+		provisionResponse.noAgent = opts.noAgent ?: false
 
-		if(opts?.containsKey('installAgent')) {
-			provisionResponse.installAgent = opts.installAgent
-		}
-		if(opts?.containsKey('noAgent')) {
-			provisionResponse.noAgent = opts.noAgent
-		}
 		if(opts?.containsKey('createUsers')) {
 			provisionResponse.createUsers = opts.createUsers
 		}
