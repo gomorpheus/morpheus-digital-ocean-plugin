@@ -255,6 +255,12 @@ class VirtualMachineSync {
         }
         def privateIpAddress = cloudItem.networks.v4?.getAt(0)?.ip_address
         def publicIpAddress = cloudItem.networks.v4?.getAt(1)?.ip_address
+        def osType = cloudItem.image?.distribution?.toLowerCase()?.contains('windows') ? 'windows' : 'linux'
+        log.info("Rahul:: osType : ${osType}")
+        log.info("Rahul:: cloudItem.image?.distribution? : ${cloudItem.image?.distribution}")
+        log.info("Rahul:: findOsMatch? : ${findOsMatch(cloudItem.image?.distribution, osType)}")
+        def osmatch = findOsMatch(cloudItem.image?.distribution, osType)
+        log.info("Rahul:: osmatch : ${osmatch.name} :: ${osmatch.code}")
         def vmConfig = [
                 account          : cloud.account,
                 externalId       : cloudItem.id,
@@ -275,9 +281,9 @@ class VirtualMachineSync {
                 maxMemory        : cloudItem.memory * ComputeUtility.ONE_MEGABYTE,
                 maxCores         : (cloudItem.vcpus?.toLong() ?: 0) * (cloudItem.disk?.toLong() ?: 0),
                 coresPerSocket   : 1l,
-                osType           : cloudItem.image ? cloudItem.image?.distribution : 'unknown',
+                osType           : osType,
                 osDevice         : '/dev/vda',
-                serverOs         : new OsType(code: 'unknown'),
+                serverOs         : findOsMatch(cloudItem.image?.distribution, osType),
                 apiKey           : java.util.UUID.randomUUID(),
                 discovered       : true,
                 region           : zonePool ? new CloudRegion(id: zonePool?.id) : null,
@@ -334,5 +340,13 @@ class VirtualMachineSync {
 
     private Map<String, ComputeServerType> getAllComputeServerTypes() {
         computeServerTypes ?: (computeServerTypes = morpheusContext.async.cloud.getComputeServerTypes(cloud.id).blockingGet().collectEntries { [it.code, it] })
+    }
+
+    private Map<String, OsType> getAllOsTypes() {
+        osTypes ?: (osTypes = morpheusContext.async.osType.listAll().toMap {it.name.toLowerCase()}.blockingGet())
+    }
+
+    def findOsMatch(distribution, osType) {
+        allOsTypes[distribution.toLowerCase()] ?: allOsTypes[osType] ?: new OsType(code:'unknown')
     }
 }
