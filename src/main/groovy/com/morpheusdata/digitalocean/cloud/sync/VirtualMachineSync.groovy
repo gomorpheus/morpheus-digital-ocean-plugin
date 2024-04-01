@@ -256,11 +256,6 @@ class VirtualMachineSync {
         def privateIpAddress = cloudItem.networks.v4?.getAt(0)?.ip_address
         def publicIpAddress = cloudItem.networks.v4?.getAt(1)?.ip_address
         def osType = cloudItem.image?.distribution?.toLowerCase()?.contains('windows') ? 'windows' : 'linux'
-        log.info("Rahul:: osType : ${osType}")
-        log.info("Rahul:: cloudItem.image?.distribution? : ${cloudItem.image?.distribution}")
-        log.info("Rahul:: findOsMatch? : ${findOsMatch(cloudItem.image?.distribution, osType)}")
-        def osmatch = findOsMatch(cloudItem.image?.distribution, osType)
-        log.info("Rahul:: osmatch : ${osmatch.name} :: ${osmatch.code}")
         def vmConfig = [
                 account          : cloud.account,
                 externalId       : cloudItem.id,
