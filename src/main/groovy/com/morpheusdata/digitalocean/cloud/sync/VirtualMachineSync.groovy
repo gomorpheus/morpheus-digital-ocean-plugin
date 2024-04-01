@@ -85,7 +85,7 @@ class VirtualMachineSync {
         }
     }
 
-    void updateMatchedVirtualMachines(List<SyncTask.UpdateItem<ComputeServer, Map>> updateList) {
+    void    updateMatchedVirtualMachines(List<SyncTask.UpdateItem<ComputeServer, Map>> updateList) {
         List<ComputeServer> saves = []
 
         for (update in updateList) {
@@ -113,34 +113,50 @@ class VirtualMachineSync {
                         currentServer.resourcePool = zonePool?.id ? new CloudPool(id: zonePool.id) : null
                         save = true
                     }
-                    if (currentServer.externalIp != cloudItem.publicIpAddress) {
+                    def publicIpAddress = cloudItem.networks.v4?.getAt(1)?.ip_address
+                    if (currentServer.externalIp != publicIpAddress) {
                         if (currentServer.externalIp == currentServer.sshHost) {
-                            if (cloudItem.publicIpAddress) {
-                                currentServer.sshHost = cloudItem.publicIpAddress
+                            if (publicIpAddress) {
+                                currentServer.sshHost = publicIpAddress
                             } else if (powerState == ComputeServer.PowerState.off) {
                                 currentServer.sshHost = currentServer.internalIp
                             } else {
                                 currentServer.sshHost = null
                             }
                         }
-                        currentServer.externalIp = cloudItem.publicIpAddress
+                        currentServer.externalIp = publicIpAddress
                         save = true
                     }
-                    if (currentServer.internalIp != cloudItem.privateIpAddress) {
+                    def privateIpAddress = cloudItem.networks.v4?.getAt(0)?.ip_address
+                    if (currentServer.internalIp != privateIpAddress) {
                         if (currentServer.internalIp == currentServer.sshHost) {
-                            currentServer.sshHost = cloudItem.privateIpAddress
+                            currentServer.sshHost = privateIpAddress
                         }
-                        currentServer.internalIp = cloudItem.privateIpAddress
+                        currentServer.internalIp = privateIpAddress
                         save = true
                     }
-                    if (currentServer.lvmEnabled != (cloudItem.blockDeviceMappings?.size() > 1)) {
-                        currentServer.lvmEnabled = cloudItem.blockDeviceMappings.size() > 1
-                        save = true
-                    }
+
                     if (powerState != currentServer.powerState) {
                         currentServer.powerState = powerState
                         save = true
                     }
+
+                    def maxMemory = cloudItem.memory * ComputeUtility.ONE_MEGABYTE
+                    if(currentServer.maxMemory != maxMemory) {
+                        currentServer.maxMemory = maxMemory
+                        save = true
+                    }
+                   /* def maxCores = (cloudItem.vcpus?.toLong() ?: 0) * (cloudItem.disk?.toLong() ?: 0)
+                    if(currentServer.maxCores != maxCores) {
+                        currentServer.maxCores = maxCores
+                        save = true
+                    }*/
+                    def maxStorage = cloudItem.disk * ComputeUtility.ONE_GIGABYTE
+                    if(currentServer.maxStorage != maxStorage) {
+                        currentServer.maxStorage = maxStorage
+                        save = true
+                    }
+
                     // Set the plan on the server
                     if (currentServer.plan?.code != "digitalocean.size.${cloudItem.size_slug}") {
                         ServicePlan servicePlan = digitalOceanServicePlans["digitalocean.size.${cloudItem.size_slug}".toString()]
@@ -239,6 +255,7 @@ class VirtualMachineSync {
         }
         def privateIpAddress = cloudItem.networks.v4?.getAt(0)?.ip_address
         def publicIpAddress = cloudItem.networks.v4?.getAt(1)?.ip_address
+        def osType = cloudItem.image?.distribution?.toLowerCase()?.contains('windows') ? 'windows' : 'linux'
         def vmConfig = [
                 account          : cloud.account,
                 externalId       : cloudItem.id,
@@ -259,9 +276,9 @@ class VirtualMachineSync {
                 maxMemory        : cloudItem.memory * ComputeUtility.ONE_MEGABYTE,
                 maxCores         : (cloudItem.vcpus?.toLong() ?: 0) * (cloudItem.disk?.toLong() ?: 0),
                 coresPerSocket   : 1l,
-                osType           : 'unknown',
+                osType           : osType,
                 osDevice         : '/dev/vda',
-                serverOs         : new OsType(code: 'unknown'),
+                serverOs         : findOsMatch(cloudItem.image?.distribution, osType),
                 apiKey           : java.util.UUID.randomUUID(),
                 discovered       : true,
                 region           : zonePool ? new CloudRegion(id: zonePool?.id) : null,
@@ -318,5 +335,13 @@ class VirtualMachineSync {
 
     private Map<String, ComputeServerType> getAllComputeServerTypes() {
         computeServerTypes ?: (computeServerTypes = morpheusContext.async.cloud.getComputeServerTypes(cloud.id).blockingGet().collectEntries { [it.code, it] })
+    }
+
+    private Map<String, OsType> getAllOsTypes() {
+        osTypes ?: (osTypes = morpheusContext.async.osType.listAll().toMap {it.name.toLowerCase()}.blockingGet())
+    }
+
+    def findOsMatch(distribution, osType) {
+        allOsTypes[distribution.toLowerCase()] ?: allOsTypes[osType] ?: new OsType(code:'unknown')
     }
 }
