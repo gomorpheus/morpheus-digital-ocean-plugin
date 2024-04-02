@@ -38,7 +38,7 @@ resource "compute-type-layout" "kubernetes-1_29-ubuntu-22_04-digitalocean-amd64-
 # HA layout
 resource "compute-type-layout" "kubernetes-1_29-ubuntu-22_04-digitalocean-amd64" {
   code = "kubernetes-1_29-ubuntu-22_04-digitalocean-amd64"
-  enabled = true
+  enabled = 0
   name = "MKS Kubernetes 1.29 HA Cluster on Ubuntu 22.04"
   sortOrder = 104
   computeVersion = "22.04"
