@@ -113,7 +113,7 @@ class VirtualMachineSync {
                         currentServer.resourcePool = zonePool?.id ? new CloudPool(id: zonePool.id) : null
                         save = true
                     }
-                    def publicIpAddress = cloudItem.networks.v4?.getAt(1)?.ip_address
+                    def publicIpAddress = cloudItem.networks.v4?.find { it.type == "public" }?.ip_address
                     if (currentServer.externalIp != publicIpAddress) {
                         if (currentServer.externalIp == currentServer.sshHost) {
                             if (publicIpAddress) {
@@ -127,7 +127,7 @@ class VirtualMachineSync {
                         currentServer.externalIp = publicIpAddress
                         save = true
                     }
-                    def privateIpAddress = cloudItem.networks.v4?.getAt(0)?.ip_address
+                    def privateIpAddress = cloudItem.networks.v4?.find { it.type == "private" }?.ip_address
                     if (currentServer.internalIp != privateIpAddress) {
                         if (currentServer.internalIp == currentServer.sshHost) {
                             currentServer.sshHost = privateIpAddress
@@ -253,8 +253,8 @@ class VirtualMachineSync {
         def computeServerType = cloudProvider.computeServerTypes.find {
             it.code == 'digitalOceanUnmanaged'
         }
-        def privateIpAddress = cloudItem.networks.v4?.getAt(0)?.ip_address
-        def publicIpAddress = cloudItem.networks.v4?.getAt(1)?.ip_address
+        def privateIpAddress = cloudItem.networks.v4?.find { it.type == "private" }?.ip_address
+        def publicIpAddress = cloudItem.networks.v4?.find { it.type == "public" }?.ip_address
         def osType = cloudItem.image?.distribution?.toLowerCase()?.contains('windows') ? 'windows' : 'linux'
         def vmConfig = [
                 account          : cloud.account,
@@ -263,7 +263,7 @@ class VirtualMachineSync {
                 resourcePool     : zonePool ? new CloudPool(id: zonePool?.id) : null,
                 externalIp       : publicIpAddress,
                 internalIp       : privateIpAddress,
-                sshHost          : privateIpAddress,
+                sshHost          : publicIpAddress,
                 sshUsername      : 'root',
                 provision        : false,
                 cloud            : cloud,
