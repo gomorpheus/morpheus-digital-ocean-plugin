@@ -111,7 +111,7 @@ resource "compute-type-set" "kubernetes-1_27-ha-final-master-ubuntu-20_04-digita
 # layout
 resource "compute-type-layout" "kubernetes-1_27-ubuntu-20_04-digitalocean-amd64" {
   code = "kubernetes-1.27-ubuntu-20.04-digitalocean-amd64"
-  enabled = false
+  enabled = true
   name = "MKS Kubernetes 1.27 HA Cluster on Ubuntu 20.04"
   sortOrder = 120
   computeVersion = "20.04"
