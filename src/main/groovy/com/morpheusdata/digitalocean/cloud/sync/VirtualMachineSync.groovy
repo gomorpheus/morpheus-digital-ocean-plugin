@@ -166,6 +166,11 @@ class VirtualMachineSync {
                         }
                     }
                     if (save) {
+						if(currentServer.cloud == null) {
+							// compensate for a bug in the morpheus marshaller causing cloud to be null
+							// on cluster workers
+							currentServer.cloud = cloud
+						}
                         saves << currentServer
                     }
                 } catch (e) {
