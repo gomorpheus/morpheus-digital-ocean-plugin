@@ -587,6 +587,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 	@Override
 	ServiceResponse<ProvisionResponse> runHost(ComputeServer server, HostRequest hostRequest, Map opts) {
 		DigitalOceanApiService apiService = new DigitalOceanApiService()
+		CloudPool cloudPool = server?.resourcePool
 
 		log.debug("runHost: ${server} ${hostRequest} ${opts}")
 
@@ -610,7 +611,8 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 				'backups'           : "${opts.doBackups}",
 				'ipv6'              : false,
 				'user_data'         : hostRequest.cloudConfigUser,
-				'private_networking': false
+				'private_networking': false,
+				'vpc_uuid'			: cloudPool.externalId
 		]
 
 		def response = apiService.createDroplet(apiKey, dropletConfig)

@@ -178,6 +178,7 @@ class VirtualMachineSync {
                 }
             }
         }
+
         if (saves) {
             morpheusContext.async.computeServer.bulkSave(saves).blockingGet()
         }
