@@ -184,7 +184,7 @@ class DigitalOceanApiService {
 		String apiPath = "/v2/droplets/${dropletId}"
 		ServiceResponse response = internalDeleteApiRequest(apiKey, apiPath)
 		log.debug("deleteDroplet response: ${response}")
-		if(response.success) {
+		if(response.success || response.errorCode == '404') {
 			rtn.success = true
 		} else {
 			rtn.success = false
