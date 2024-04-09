@@ -46,7 +46,7 @@ class DigitalOceanOptionSourceProvider implements OptionSourceProvider {
 	List<String> getMethodNames() {
 		return new ArrayList<String>(['digitalOceanImage', 'digitalOceanVpc'])
 	}
-	
+
 	def digitalOceanImage(args) {
 		log.debug "digitalOceanImage: ${args}"
 		def zoneId = args?.size() > 0 ? args.getAt(0).zoneId?.toLong() : null

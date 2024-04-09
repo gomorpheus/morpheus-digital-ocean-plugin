@@ -11,8 +11,8 @@ import com.morpheusdata.model.Cloud
 import com.morpheusdata.model.ReferenceData
 import com.morpheusdata.model.projection.ReferenceDataSyncProjection
 import groovy.util.logging.Slf4j
-import io.reactivex.Maybe
-import io.reactivex.Observable
+import io.reactivex.rxjava3.core.Maybe
+import io.reactivex.rxjava3.core.Observable
 
 @Slf4j
 class DatacenterDatasetProvider extends AbstractDatasetProvider<ReferenceData, String> {
