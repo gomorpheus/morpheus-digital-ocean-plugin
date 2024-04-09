@@ -44,62 +44,9 @@ class DigitalOceanOptionSourceProvider implements OptionSourceProvider {
 
 	@Override
 	List<String> getMethodNames() {
-		return new ArrayList<String>(['digitalOceanDataCenters', 'digitalOceanImage', 'digitalOceanVpc'])
+		return new ArrayList<String>(['digitalOceanImage', 'digitalOceanVpc'])
 	}
-
-	def digitalOceanDataCenters(args) {
-		log.debug("datacenters: ${args}")
-		List datacenters = []
-		Long cloudId = args.getAt(0)?.zoneId?.toLong()
-		String paramsApiKey = plugin.getAuthConfig(args.getAt(0) as Map).doApiKey
-		Cloud cloud = null
-
-		// if we know the cloud then load from cached data
-		if(cloudId) {
-			cloud = morpheus.services.cloud.get(cloudId)
-			morpheus.services.referenceData.list(new DataQuery().withFilter("category", "digitalocean.${cloudId}.datacenter")).each { ReferenceDataSyncProjection refData ->
-				datacenters << [name: refData.name, value: refData.externalId]
-			}
-		}
-
-		// check if auth config has changed and force a refresh of the datacenters
-		if(cloud) {
-			def cloudApiKey = plugin.getAuthConfig(cloud).doApiKey
-			log.debug("api key: ${cloudApiKey} vs ${paramsApiKey}")
-			if(cloudApiKey != paramsApiKey && paramsApiKey?.startsWith("******") == false) {
-				log.debug("API key has changed, clearing cached datacenters")
-				datacenters = []
-			}
-		}
-
-		// if cloud isn't created or hasn't cached the datacenters yet, load directly from the API
-		if(datacenters.size() == 0) {
-			log.debug("Datacenters not cached, loading from API")
-			DigitalOceanApiService apiService = new DigitalOceanApiService()
-
-
-			if(paramsApiKey) {
-				def response = apiService.listRegions(paramsApiKey)
-				if(response.success) {
-					datacenters = []
-					response.data?.each {
-						if(it.available == true) {
-							datacenters << [name: it.name, value: it.slug]
-						}
-					}
-				}
-			} else {
-				log.debug("API key not supplied, failed to load datacenters")
-			}
-
-		}
-
-		log.debug("listDatacenters regions: $datacenters")
-		def rtn = datacenters?.sort { it.name } ?: []
-
-		return rtn
-	}
-
+	
 	def digitalOceanImage(args) {
 		log.debug "digitalOceanImage: ${args}"
 		def zoneId = args?.size() > 0 ? args.getAt(0).zoneId?.toLong() : null

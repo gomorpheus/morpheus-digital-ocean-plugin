@@ -2,7 +2,7 @@ package com.morpheusdata.digitalocean
 
 import com.morpheusdata.digitalocean.cloud.DigitalOceanCloudProvider
 import com.morpheusdata.digitalocean.backup.DigitalOceanBackupProvider
-import com.morpheusdata.digitalocean.DigitalOceanOptionSourceProvider
+import com.morpheusdata.digitalocean.datasets.DatacenterDatasetProvider
 import com.morpheusdata.digitalocean.provisioning.DigitalOceanProvisionProvider
 import com.morpheusdata.core.MorpheusContext
 import com.morpheusdata.core.Plugin
@@ -28,9 +28,11 @@ class DigitalOceanPlugin extends Plugin {
 		DigitalOceanCloudProvider cloudProvider = new DigitalOceanCloudProvider(this, morpheus)
 		DigitalOceanProvisionProvider provisionProvider = new DigitalOceanProvisionProvider(this, morpheus)
 		DigitalOceanOptionSourceProvider optionSourceProvider = new DigitalOceanOptionSourceProvider(this, morpheus)
+		DatacenterDatasetProvider datacenterDatasetProvider = new DatacenterDatasetProvider(this, morpheus)
 		pluginProviders.put(provisionProvider.code, provisionProvider)
 		pluginProviders.put(cloudProvider.code, cloudProvider)
 		pluginProviders.put(optionSourceProvider.code, optionSourceProvider)
+		this.registerProvider(datacenterDatasetProvider)
 
 		DigitalOceanBackupProvider backupProvider = new DigitalOceanBackupProvider(this, morpheus)
 		pluginProviders.put(backupProvider.code, backupProvider)
