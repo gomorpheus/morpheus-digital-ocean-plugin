@@ -350,12 +350,9 @@ class DigitalOceanCloudProvider implements CloudProvider {
 		def rtn = ServiceResponse.prepare()
 		log.debug("Short refresh cloud ${cloud.code}")
 		apiService = apiService ?: new DigitalOceanApiService()
-		def syncDate = new Date()
 		String apiKey = plugin.getAuthConfig(cloud).doApiKey
 		ServiceResponse testResult = apiService.testConnection(apiKey)
 		if(testResult.success) {
-			(new DatacentersSync(plugin, cloud, apiService)).execute()
-			(new SizesSync(plugin, cloud, apiService)).execute()
 			(new ImagesSync(plugin, cloud, apiService, true)).execute()
 			(new VPCSync(plugin, cloud, apiService)).execute()
 			new VirtualMachineSync(plugin, cloud, apiService, this).execute()
@@ -387,7 +384,6 @@ class DigitalOceanCloudProvider implements CloudProvider {
 			(new DatacentersSync(plugin, cloud, apiService)).execute()
 			(new SizesSync(plugin, cloud, apiService)).execute()
 			(new ImagesSync(plugin, cloud, apiService, false)).execute()
-			(new VPCSync(plugin, cloud, apiService)).execute()
 			new VirtualMachineSync(plugin, cloud, apiService, this).execute()
 		} else {
 			if(testResult.data.invalidLogin) {
