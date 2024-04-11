@@ -145,7 +145,7 @@ class DigitalOceanCloudProvider implements CloudProvider {
 				code: 'zoneType.digitalocean.datacenter',
 				fieldName: 'datacenter',
 				optionSourceType: 'digitalocean',
-				optionSource: 'digitalOceanDataCenters',
+				optionSource: 'digitalocean.digitalOceanDataCenters',
 				displayOrder: 30,
 				fieldCode: 'gomorpheus.optiontype.Datacenter',
 				fieldLabel: 'Datacenter',
