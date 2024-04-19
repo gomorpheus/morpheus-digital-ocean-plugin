@@ -26,6 +26,7 @@ import com.morpheusdata.model.OsType
 import com.morpheusdata.model.ServicePlan
 import com.morpheusdata.model.StorageVolume
 import com.morpheusdata.model.VirtualImage
+import com.morpheusdata.model.VirtualImageType
 import com.morpheusdata.model.Workload
 import com.morpheusdata.model.Cloud
 import com.morpheusdata.model.KeyPair
@@ -43,8 +44,6 @@ import groovy.util.logging.Slf4j
 class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements ComputeProvisionProvider, VmProvisionProvider, WorkloadProvisionProvider.ResizeFacet, HostProvisionProvider.ResizeFacet {
 	DigitalOceanPlugin plugin
 	MorpheusContext morpheusContext
-	private static final String DIGITAL_OCEAN_ENDPOINT = 'https://api.digitalocean.com'
-	private static final String UBUNTU_VIRTUAL_IMAGE_CODE = 'digitalocean.image.morpheus.ubuntu.18.04'
 
 	DigitalOceanProvisionProvider(DigitalOceanPlugin plugin, MorpheusContext morpheusContext) {
 		this.plugin = plugin
@@ -78,12 +77,31 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 	}
 
 	@Override
+	// images can be uploaded in raw, qcow2, vhdx, vdi, or vmdk formats and will be converted to qcow2
+	Collection<VirtualImageType> getVirtualImageTypes() {
+		def virtualImageTypes = [
+			new VirtualImageType(
+				code:"digitalocean", name:"Digital Ocean", nameCode:"gomorpheus.virtualImage.types.digitalOcean",
+				creatable: true, active:true, visible: true
+			),
+			new VirtualImageType(code: 'raw', name: 'RAW'),
+			new VirtualImageType(code: 'qcow2', name: 'QCOW2'),
+			new VirtualImageType(code: 'vhdx', name: 'VHDX'),
+			new VirtualImageType(code: 'vdi', name: 'VDI'),
+			new VirtualImageType(code: 'vmdk', name: 'VMDK')
+		]
+
+		return virtualImageTypes
+	}
+
+	@Override
 	Collection<VirtualImage> getVirtualImages() {
 		VirtualImage virtualImage = new VirtualImage(
-				code: UBUNTU_VIRTUAL_IMAGE_CODE,
+				code: 'digitalocean.image.morpheus.ubuntu.18.04',
 				category:'digitalocean.image.morpheus',
 				name:'Ubuntu 18.04 LTS (Digital Ocean Marketplace)',
 				imageType: ImageType.qcow2,
+				virtualImageType: new VirtualImageType(code: 'qcow2'),
 				systemImage:true,
 				isCloudInit:true,
 				externalId:'ubuntu-18-04-x64',
