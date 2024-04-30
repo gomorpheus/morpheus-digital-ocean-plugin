@@ -606,6 +606,8 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 	ServiceResponse<ProvisionResponse> runHost(ComputeServer server, HostRequest hostRequest, Map opts) {
 		DigitalOceanApiService apiService = new DigitalOceanApiService()
 		CloudPool cloudPool = server?.resourcePool
+		String cloudPoolExternalId = cloudPool?.externalId ?: server.cloud.configMap.vpc
+		log.debug("cloudPoolExternalId: ${cloudPoolExternalId}")
 
 		log.debug("runHost: ${server} ${hostRequest} ${opts}")
 
@@ -630,7 +632,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 				'ipv6'              : false,
 				'user_data'         : hostRequest.cloudConfigUser,
 				'private_networking': false,
-				'vpc_uuid'			: cloudPool.externalId
+				'vpc_uuid'			: cloudPoolExternalId
 		]
 
 		def response = apiService.createDroplet(apiKey, dropletConfig)
