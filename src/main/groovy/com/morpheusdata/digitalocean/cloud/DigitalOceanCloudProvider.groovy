@@ -103,6 +103,11 @@ class DigitalOceanCloudProvider implements CloudProvider {
 	}
 
 	@Override
+	Boolean provisionRequiresResourcePool() {
+		return true
+	}
+
+	@Override
 	Collection<OptionType> getOptionTypes() {
 		def options = []
 		options << new OptionType(

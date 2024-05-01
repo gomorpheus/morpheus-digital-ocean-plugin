@@ -383,11 +383,6 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 		return true
 	}
 
-	@Override
-	Boolean provisionRequiresResourcePool() {
-		return true
-	}
-
 	/**
 	 * Indicates if a ComputeZonePool is required during provisioning
 	 * @return Boolean
