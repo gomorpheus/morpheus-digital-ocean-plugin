@@ -97,6 +97,7 @@ class VPCSync {
 				refType    : 'ComputeZone',
 				refId      : cloud.id,
 				regionCode : region,
+				active     : cloud.defaultPoolSyncActive,
 				cloud      : [id: cloud.id],
 				category   : "digitalocean.${cloud.id}.vpc",
 				code       : "digitalocean.${cloud.id}.vpc.${cloudItem.id}"

@@ -51,7 +51,7 @@ class SizesSync {
 				def name = getNameForSize(it)
 				def servicePlan = new ServicePlan(
 						code: "${SIZE_PREFIX}${it.slug}".toString(),
-						active: true,
+						active: cloud.defaultPlanSyncActive,
 						provisionTypeCode: 'digitalocean',
 						description: name,
 						name: name,
