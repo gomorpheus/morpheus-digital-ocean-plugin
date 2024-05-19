@@ -101,7 +101,7 @@ test {
 }
 
 shadowJar {
-	archiveFileName = "${project.name}-${version}.jar"
+	// archiveFileName = "${project.name}-${version}.jar"
 }
 
 tasks.assemble.dependsOn tasks.shadowJar
