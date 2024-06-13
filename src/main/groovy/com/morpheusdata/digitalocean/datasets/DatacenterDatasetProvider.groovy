@@ -9,13 +9,14 @@ import com.morpheusdata.digitalocean.DigitalOceanApiService
 import com.morpheusdata.digitalocean.DigitalOceanPlugin
 import com.morpheusdata.model.Cloud
 import com.morpheusdata.model.ReferenceData
+import com.morpheusdata.core.util.MorpheusUtils
 import com.morpheusdata.model.projection.ReferenceDataSyncProjection
 import groovy.util.logging.Slf4j
 import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.core.Observable
 
 @Slf4j
-class DatacenterDatasetProvider extends AbstractDatasetProvider<ReferenceData, String> {
+class DatacenterDatasetProvider extends AbstractDatasetProvider<ReferenceData, Long> {
 
 	public static final providerName = 'DigitalOcean Datacenters'
 	public static final providerNamespace = 'digitalocean'
@@ -114,15 +115,21 @@ class DatacenterDatasetProvider extends AbstractDatasetProvider<ReferenceData, S
 
 	@Override
 	ReferenceData fetchItem(Object value) {
-		// we can't really fetch the item here without more information. For our purposes, an option source for a new cloud form, we use the external ID as the value.
-		// When creating a cloud we don't have an internal ID yet, so we need to use the external ID as the value.
-		return null
+		def rtn = null
+		if(value instanceof Long) {
+			rtn = item((Long) value)
+		} else if(value instanceof CharSequence) {
+			def longValue = MorpheusUtils.parseLongConfig(value)
+			if(longValue) {
+				rtn = item(longValue)
+			}
+		}
+		return rtn
 	}
 
-	ReferenceData item(String value) {
-		// we can't really fetch the item here without more information. For our purposes, an option source for a new cloud form, we use the external ID as the value.
-		// When creating a cloud we don't have an internal ID yet, so we need to use the external ID as the value.
-		return null
+	@Override
+	ReferenceData item(Long value) {
+		return morpheus.services.referenceData.get(value)
 	}
 
 	@Override
@@ -131,8 +138,8 @@ class DatacenterDatasetProvider extends AbstractDatasetProvider<ReferenceData, S
 	}
 
 	@Override
-	String itemValue(ReferenceData item) {
-		return item.externalId
+	Long itemValue(ReferenceData item) {
+		return item.id
 	}
 
 	@Override
