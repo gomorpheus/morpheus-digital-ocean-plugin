@@ -93,7 +93,7 @@ resource "compute-type-set" "kubernetes-1_27-ubuntu-20_04-worker-digitalocean-am
 # layout
 resource "compute-type-layout" "kubernetes-1_27-ubuntu-20_04-digitalocean-amd64-single" {
   code = "kubernetes-1.27-ubuntu-20.04-digitalocean-amd64-single"
-  enabled = true
+  enabled = false
   name = "MKS Kubernetes 1.27 Cluster on Ubuntu 20.04"
   sortOrder = 93
   computeVersion = "20.04"

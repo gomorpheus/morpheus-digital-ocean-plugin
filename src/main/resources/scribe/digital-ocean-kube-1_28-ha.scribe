@@ -115,7 +115,7 @@ resource "compute-type-layout" "kubernetes-1_28-ubuntu-22_04-digitalocean-amd64"
   code = "kubernetes-1.28-ubuntu-22.04-digitalocean-amd64"
   enabled = true
   name = "MKS Kubernetes 1.28 HA Cluster on Ubuntu 22.04"
-  sortOrder = 105
+  sortOrder = 120
   computeVersion = "22.04"
   clusterVersion = "1.28.x"
   description = "provision a high availability kubernetes 1.28 cluster on ubuntu 22.04"

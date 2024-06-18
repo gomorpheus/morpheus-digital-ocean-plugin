@@ -1,12 +1,12 @@
 # layout
-resource "compute-type-layout" "kubernetes-1_29-ubuntu-22_04-digitalocean-amd64-single" {
-  code = "kubernetes-1_29-ubuntu-22_04-digitalocean-amd64-single"
+resource "compute-type-layout" "kubernetes-1_30-ubuntu-22_04-digitalocean-amd64-single" {
+  code = "kubernetes-1_30-ubuntu-22_04-digitalocean-amd64-single"
   enabled = true
-  name = "MKS Kubernetes 1.29 Cluster on Ubuntu 22.04"
-  sortOrder = 80
+  name = "MKS Kubernetes 1.30 Cluster on Ubuntu 22.04"
+  sortOrder = 0
   computeVersion = "22.04"
-  clusterVersion = "1.29.x"
-  description = "provision a kubernetes 1.29 cluster on ubuntu 22.04"
+  clusterVersion = "1.30.x"
+  description = "provision a kubernetes 1.30 cluster on ubuntu 22.04"
   type = "digitaloceanKubeMaster"
   serverCount = 4
   memoryRequirement = 1073741824
@@ -27,23 +27,23 @@ resource "compute-type-layout" "kubernetes-1_29-ubuntu-22_04-digitalocean-amd64-
   packages = [
     "kubernetes-calico-3-26-0-package",
     "kubernetes-rook-1-13-package",
-    "kubernetes-fluentbit-1-8-9-1-modified-package",
-    "kubernetes-prometheus-0-9-modified-package",
-    "kubernetes-nginx-ingress-operator-1-9-4-package"
+    "kubernetes-fluentbit-3-0-7-package",
+    "kubernetes-prometheus-0-12-package",
+    "kubernetes-nginx-ingress-operator-1-10-1-package"
   ]
 }
 
 
 
 # HA layout
-resource "compute-type-layout" "kubernetes-1_29-ubuntu-22_04-digitalocean-amd64" {
-  code = "kubernetes-1_29-ubuntu-22_04-digitalocean-amd64"
+resource "compute-type-layout" "kubernetes-1_30-ubuntu-22_04-digitalocean-amd64" {
+  code = "kubernetes-1_30-ubuntu-22_04-digitalocean-amd64"
   enabled = true
-  name = "MKS Kubernetes 1.29 HA Cluster on Ubuntu 22.04"
-  sortOrder = 105
+  name = "MKS Kubernetes 1.30 HA Cluster on Ubuntu 22.04"
+  sortOrder = 104
   computeVersion = "22.04"
-  clusterVersion = "1.29.x"
-  description = "provision a high availability kubernetes 1.29 cluster on ubuntu 22.04"
+  clusterVersion = "1.30.x"
+  description = "provision a high availability kubernetes 1.30 cluster on ubuntu 22.04"
   type = "digitaloceanKubeMaster"
   serverCount = 6
   memoryRequirement = 1073741824
@@ -66,8 +66,8 @@ resource "compute-type-layout" "kubernetes-1_29-ubuntu-22_04-digitalocean-amd64"
   packages = [
     "kubernetes-calico-3-26-0-package",
     "kubernetes-rook-1-13-package",
-    "kubernetes-fluentbit-1-8-9-1-modified-package",
-    "kubernetes-prometheus-0-9-modified-package",
-    "kubernetes-nginx-ingress-operator-1-9-4-package"
+    "kubernetes-fluentbit-3-0-7-package",
+    "kubernetes-prometheus-0-12-package",
+    "kubernetes-nginx-ingress-operator-1-10-1-package"
   ]
 }
