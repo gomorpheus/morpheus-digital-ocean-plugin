@@ -1,0 +1,128 @@
+# master
+resource "workload-type" "kubernetes-1_26-ubuntu-20_04-digitalocean-amd64" {
+  code             = "kubernetes-1.26-ubuntu-20.04-digitalocean-amd64"
+  shortName        = "kubernetes-ubuntu"
+  name             = "Kubernetes 1.26 Cluster on Ubuntu 20.04"
+  containerVersion = "1.26.10"
+  repositoryImage  = ""
+  imageCode        = "morpheus kubernetes 1.26 on ubuntu 20.04"
+  entryPoint       = ""
+  mountLogs        = "var/log"
+  statTypeCode     = "server"
+  logTypeCode      = "ubuntu"
+  showServerLogs   = true
+  category         = "kubernetes"
+  cloneType        = "ubuntu"
+  priorityOrder    = 0
+  serverType       = "vm"
+  providerType     = "digitalocean"
+  checkTypeCode    = "vmCheck"
+  virtualImage     = virtual-image.digitalocean-image-morpheus-ubuntu-20_04
+  containerPorts   = ["ubuntu_22"]
+  provisionType    = "digitalocean"
+  scripts          = [
+    "setup-disks-v1", "kubernetes-1-26-ubuntu-install-v1", "kubernetes-1-26-kubeadm-cluster-master-init-v1",
+    "kubernetes-1-26-kubeadm-cluster-master-setup-v1"
+  ]
+  templates = []
+}
+
+# worker
+resource "workload-type" "kubernetes-1_26-ubuntu-20_04-worker-digitalocean-amd64" {
+  code             = "kubernetes-1.26-ubuntu-20.04-worker-digitalocean-amd64"
+  shortName        = "kubernetes-worker-ubuntu"
+  name             = "Kubernetes 1.26 Worker on Ubuntu 20.04"
+  containerVersion = "1.26.10"
+  repositoryImage  = ""
+  imageCode        = "morpheus kubernetes 1.26 on ubuntu 20.04"
+  entryPoint       = ""
+  mountLogs        = "/var/log"
+  statTypeCode     = "server"
+  logTypeCode      = "ubuntu"
+  showServerLogs   = true
+  category         = "kubernetes"
+  cloneType        = "ubuntu"
+  priorityOrder    = 0
+  serverType       = "vm"
+  providerType     = "digitalocean"
+  checkTypeCode    = "vmCheck"
+  virtualImage     = virtual-image.digitalocean-image-morpheus-ubuntu-20_04
+  containerPorts   = ["ubuntu.22"]
+  provisionType    = "digitalocean"
+  scripts          = [
+    "setup-disks-v1",
+    "kubernetes-1-26-ubuntu-install-v1",
+    "kubernetes-1-26-kubeadm-worker-join-v1"
+  ]
+  templates = []
+}
+
+# master set
+resource "compute-type-set" "kubernetes-1_26-ubuntu-20_04-digitalocean-amd64-set" {
+  code = "kubernetes-1.26-ubuntu-20.04-digitalocean-amd64-set"
+  name = "kubernetes master"
+  workloadType = workload-type.kubernetes-1_26-ubuntu-20_04-digitalocean-amd64
+  computeServerType = compute-server-type.digitaloceanKubeMaster
+  category = "ubuntu"
+  priorityOrder = 0
+  dynamicCount = false
+  nodeCount = 1
+  nameSuffix = "-master"
+  nodeType = "master"
+  installContainerRuntime = false
+  installStorageRuntime = false
+}
+
+# worker set
+resource "compute-type-set" "kubernetes-1_26-ubuntu-20_04-worker-digitalocean-amd64-set" {
+  name = "kubernetes worker"
+  code = "kubernetes-1.26-ubuntu-20.04-worker-digitalocean-amd64-set"
+  containerType = workload-type.kubernetes-1_26-ubuntu-20_04-worker-digitalocean-amd64
+  computeServerType = "digitaloceanKubeWorker"
+  category = "ubuntu"
+  priorityOrder = 1
+  dynamicCount = true
+  nodeCount = 3
+  nameSuffix = "-worker"
+  nodeType = "worker"
+  canAddNodes = true
+  installContainerRuntime = false
+  installStorageRuntime = false
+}
+
+# layout
+resource "compute-type-layout" "kubernetes-1_26-ubuntu-20_04-digitalocean-amd64-single" {
+  code = "kubernetes-1.26-ubuntu-20.04-digitalocean-amd64-single"
+  enabled = false
+  name = "MKS Kubernetes 1.26 Cluster on Ubuntu 20.04"
+  sortOrder = 93
+  computeVersion = "20.04"
+  clusterVersion = "1.26.x"
+  description = "provision a kubernetes 1.26 cluster on ubuntu 20.04"
+  type = "digitaloceanKubeMaster"
+  serverCount = 4
+  memoryRequirement = 1073741824
+  hasAutoScale = true
+  containerRuntime = "containerd"
+  networkRuntime = "calico"
+  config = jsondecode({containerDupdated = true})
+  computeServers = [
+    "kubernetes-1.26-ubuntu-20.04-digitalocean-amd64-set",
+    "kubernetes-1.26-ubuntu-20.04-worker-digitalocean-amd64-set"
+  ]
+  groupType = "kubernetes-cluster"
+  provisionType =  "digitalocean"
+  optionTypes = [
+    "kubernetes.master.podCidr",
+    "kubernetes.master.serviceCidr"
+  ]
+  specTemplates = []
+  packages = [
+    "kubernetes-calico-3-26-0-package",
+    "kubernetes-rook-1-12-package",
+    "kubernetes-fluentbit-1-8-9-1-modified-package",
+    "kubernetes-prometheus-0-9-modified-package",
+    "kubernetes-nginx-ingress-operator-1-9-4-package"
+  ]
+}
+

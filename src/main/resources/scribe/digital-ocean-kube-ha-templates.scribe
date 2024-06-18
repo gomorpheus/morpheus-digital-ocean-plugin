@@ -1,0 +1,110 @@
+# master
+resource "workload-type" "kubernetes-ha-master-ubuntu-22_04-digitalocean-amd64" {
+  code             = "kubernetes-ha-master-ubuntu-22_04-digitalocean-amd64"
+  shortName        = "kubernetes-ubuntu"
+  name             = "DO Kubernetes HA Master Cluster on Ubuntu 22.04"
+  containerVersion = "22.04"
+  repositoryImage  = ""
+  imageCode        = "digitalocean morpheus kubernetes on ubuntu 22.04"
+  entryPoint       = ""
+  mountLogs        = "/var/log"
+  statTypeCode     = "server"
+  logTypeCode      = "ubuntu"
+  showServerLogs   = true
+  category         = "kubernetes"
+  cloneType        = "ubuntu"
+  priorityOrder    = 0
+  serverType       = "vm"
+  providerType     = "digitalocean"
+  checkTypeCode    = "vmCheck"
+  virtualImage     = virtual-image.digitalocean-image-morpheus-ubuntu-22_04
+  containerPorts   = ["ubuntu.22"]
+  provisionType    = "digitalocean"
+  scripts          = [
+    "setup-disks-v1", "kube-ubuntu-22-setup-script-v1", "kube-adm-master-setup-script-v1",
+    "kubernetes-ectd-encrypt-install-master-script-v1", "kube-kubeadm-cluster-shared-key ",
+    "k8-config-save"
+  ]
+  templates = ["do-kubeadm-cluster-master-init","k8-cypher","kubernetes-etcd-encrypt-install-master", "replace-external-ip"]
+}
+
+# add master vm
+resource "workload-type" "kubernetes-ha-add-master-ubuntu-22_04-digitalocean-amd64" {
+  code             = "kubernetes-ha-add-master-ubuntu-22_04-digitalocean-amd64"
+  shortName        = "kubernetes-ubuntu"
+  name             = "DO Kubernetes HA Add Master Cluster on Ubuntu 22.04"
+  containerVersion = "22.04"
+  repositoryImage  = ""
+  imageCode        = "digitalocean morpheus kubernetes on ubuntu 22.04"
+  entryPoint       = ""
+  mountLogs        = "/var/log"
+  statTypeCode     = "server"
+  logTypeCode      = "ubuntu"
+  showServerLogs   = true
+  category         = "kubernetes"
+  cloneType        = "ubuntu"
+  priorityOrder    = 0
+  serverType       = "vm"
+  providerType     = "digitalocean"
+  checkTypeCode    = "vmCheck"
+  virtualImage     = virtual-image.digitalocean-image-morpheus-ubuntu-22_04
+  containerPorts   = ["ubuntu.22"]
+  provisionType    = "digitalocean"
+  scripts          = [
+    "setup-disks-v1", "kube-kubeadm-cluster-shared-key", "kube-ubuntu-22-setup-script-v1", "k8-config-fetch",
+    "kubernetes-kubeadm-cluster-add-master-init-v1", "kube-ectd-encrypt-install-add-master-script-v1"
+  ]
+  templates = ["k8-cypher", "do-kubeadm-cluster-add-master-init","kubernetes-etcd-encrypt-install-master", "replace-external-ip"]
+}
+
+
+# master set
+resource "compute-type-set" "kubernetes-ha-master-ubuntu-22_04-digitalocean-amd64-set" {
+  code             = "kubernetes-ha-master-ubuntu-22_04-digitalocean-amd64-set"
+  name             = "kubernetes master"
+  workloadType    = workload-type.kubernetes-ha-master-ubuntu-22_04-digitalocean-amd64
+  computeServerType= "digitaloceanKubeMaster"
+  category         = "ubuntu"
+  priorityOrder    = 0
+  dynamicCount     = false
+  forceNameIndex   = true
+  nodeCount        = 1
+  nameSuffix       = "-master"
+  nodeType         = "master"
+  installContainerRuntime = false
+  installStorageRuntime = false
+}
+
+# add master set
+resource "compute-type-set" "kubernetes-ha-add-master-ubuntu-22_04-digitalocean-amd64-set" {
+  code             = "kubernetes-ha-add-master-ubuntu-22_04-digitalocean-amd64-set"
+  name             = "kubernetes master"
+  workloadType    = workload-type.kubernetes-ha-add-master-ubuntu-22_04-digitalocean-amd64
+  computeServerType= "digitaloceanKubeMaster"
+  category         = "ubuntu"
+  priorityOrder    = 1
+  dynamicCount     = false
+  forceNameIndex   = true
+  nodeCount        = 1
+  nameSuffix       = "-master"
+  nodeType         = "master"
+  installContainerRuntime = false
+  installStorageRuntime = false
+}
+
+# add final setup
+resource "compute-type-set" "kubernetes-ha-final-master-ubuntu-22_04-digitalocean-amd64-set" {
+  code             = "kubernetes-ha-final-master-ubuntu-22_04-digitalocean-amd64-set"
+  name             = "kubernetes master"
+  workloadType    = workload-type.kubernetes-ha-add-master-ubuntu-22_04-digitalocean-amd64
+  computeServerType= "digitaloceanKubeMaster"
+  category         = "ubuntu"
+  priorityOrder    = 2
+  dynamicCount     = false
+  forceNameIndex   = true
+  nodeCount        = 1
+  nameSuffix       = "-master"
+  nodeType         = "master"
+  installContainerRuntime = false
+  installStorageRuntime = false
+}

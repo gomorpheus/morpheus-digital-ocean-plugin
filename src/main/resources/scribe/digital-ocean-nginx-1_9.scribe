@@ -1,0 +1,77 @@
+resource "workload-type" "nginx-digitalocean-1_9-ubuntu-20_04" {
+  code = "nginx-digitalocean-1.9-ubuntu-20.04"
+  shortName = "nginx"
+  name = "NGINX 1.9"
+  ports = [80, 443]
+  containerVersion = "1.9"
+  repositoryImage = ""
+  entryPoint = "/entrypoint.sh"
+  statTypeCode = "vm"
+  logTypeCode = "nginx"
+  checkTypeCode = "webGetCheck"
+  mountPoint = "/data"
+  mountData = "/morpheus/data"
+  mountConfig = "/etc/nginx"
+  mountLogs = "/var/log/nginx"
+  category = "nginx"
+  cloneType = "nginx"
+  priorityOrder = 0
+  serverType = "vm"
+  providerType = "digitalocean"
+  deploymentType = "nginx"
+  virtualImage = virtual-image.digitalocean-image-morpheus-ubuntu-20_04
+  actions = ["nginx-1.9-remove-node"]
+  scripts = [
+    "nginx-1.9-vm-entrypoint",
+    "nginx-1.9-vm-stop",
+    "nginx-1.9-vm-start"
+  ]
+  containerMounts = [
+    "nginx-1.9-config",
+    "nginx-1.9-data",
+    "nginx-1.9-certs",
+    "nginx-1.9-logs"
+  ]
+  templates = ["nginx-1.9"]
+  provisionScript = "morpheus.ansible.provision.nginx-1_9-morph.0.1"
+  provisionType = "digitalocean"
+  backupType = "digitaloceanSnapshot"
+  containerPorts = [
+    "nginx.80",
+    "nginx.443"
+  ]
+  hasSslCert = true
+  certificateFile = "nginx"
+  certificatePath = "/etc/nginx/certs"
+  certificateWritePath = "/config/certs"
+  certificateStyle = "crt_key"
+}
+
+resource "workload-type-set" "nginx-digitalocean-1_9-ubuntu-20_04-set" {
+  code = "nginx-digitalocean-1.9-ubuntu-20.04-set"
+  category = "nginx"
+  workloadType = workload-type.nginx-digitalocean-1_9-ubuntu-20_04
+  priorityOrder = 0
+  containerCount = 1
+  dynamicCount = true
+}
+
+resource "instance-type-layout" "nginx-digitalocean-1_9-ubuntu-20_04-single" {
+  code = "nginx-digitalocean-1.9-ubuntu-20.04-single"
+  name = "DigitalOcean NGINX"
+  sortOrder = 10
+  description = "This will provision a single process with no redundancy"
+  instanceType = "nginx"
+  instanceVersion = "1.9"
+  serverCount = 1
+  portCount = 2
+  serverType = "vm"
+  hasAutoScale = true
+  enabled = true
+  creatable = true
+  workloads = [
+    workload-type-set.nginx-digitalocean-1_9-ubuntu-20_04-set
+  ]
+  actions = ["nginx-1.9-add-node"]
+  provisionType = "digitalocean"
+}

@@ -1,0 +1,66 @@
+resource "workload-type" "rocky-digitalocean-8" {
+  code = "rocky-digitalocean-8"
+  shortName = "rocky"
+  name = "Rocky 8"
+  ports = [22]
+  containerVersion = "8"
+  repositoryImage = ""
+  entryPoint = "/entrypoint.sh"
+  statTypeCode = "vm"
+  logTypeCode = "vm"
+  checkTypeCode = "containerCheck"
+  mountPoint = "/morpheus"
+  category = "rocky"
+  serverType = "vm"
+  providerType = "digitalocean"
+  virtualImage = virtual-image.digitalocean-image-morpheus-rocky-8_6
+  scripts = []
+  templates = []
+  provisionType = "digitalocean"
+  backupType = "digitaloceanSnapshot"
+  actions = [
+    "generic-remove-node"
+  ]
+  containerPorts = [
+    "rocky.22"
+  ]
+}
+
+resource "workload-type-set" "rocky-digitalocean-8-set" {
+  code = "rocky-digitalocean-8-set"
+  category = "rocky"
+  dynamicCount = true
+  workloadType = workload-type.rocky-digitalocean-8
+  priorityOrder = 0
+  containerCount = 1
+}
+
+resource "instance-type-layout" "rocky-digitalocean-8-single" {
+  code = "rocky-digitalocean-8-single"
+  name = "DigitalOcean VM"
+  sortOrder = 89
+  description = "This will provision a single vm"
+  instanceType = "rocky"
+  instanceVersion = "8"
+  serverCount = 1
+  portCount = 1
+  serverType = "vm"
+  supportsConvertToManaged = true
+  enabled = true
+  creatable = true
+  workloads = [
+    workload-type-set.rocky-digitalocean-8-set
+  ]
+  actions = [
+    "generic-add-node"
+  ]
+  provisionType = "digitalocean"
+}
+
+resource "scale-action" "rocky-digitalocean-8-single" {
+  code = "rocky-digitalocean-8-single"
+  scaleType = "action"
+  layout = instance-type-layout.rocky-digitalocean-8-single
+  upAction = "generic-add-node"
+  downAction = "generic-remove-node"
+}

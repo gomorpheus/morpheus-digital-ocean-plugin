@@ -1,0 +1,66 @@
+resource "workload-type" "activemq-digitalocean-5_11-ubuntu-20_04" {
+  code = "activemq-digitalocean-5.11-ubuntu-20.04"
+  shortName = "activemq"
+  name = "ActiveMQ 5.11"
+  ports = [8161, 61616, 5672, 61613, 1883, 61614]
+  containerVersion = "5.11"
+  repositoryImage = ""
+  entryPoint = "/entrypoint.sh"
+  statTypeCode = "vm"
+  logTypeCode = "activemq"
+  checkTypeCode = "webGetCheck"
+  mountConfig = "/opt/apache-activemq-5.11.1/conf"
+  mountData = "/data/activemq"
+  mountLogs = "/var/log/activemq"
+  category = "activemq"
+  serverType = "vm"
+  providerType = "digitalocean"
+  virtualImage = virtual-image.digitalocean-image-morpheus-ubuntu-20_04
+  scripts = [
+    "activemq-5.11-vm-entrypoint",
+    "activemq-5.11-vm-stop",
+    "activemq-5.11-vm-start"
+  ]
+  provisionScript = "morpheus.ansible.provision.activemq-5_11-1"
+  provisionType = "digitalocean"
+  templates = ["activemq-conf-5.11"]
+  backupType = "digitaloceanSnapshot"
+  environmentVariables = [
+    "evar.activemq.user",
+    "evar.activemq.password"
+  ]
+  containerPorts = [
+    "activemq.8161",
+    "activemq.61616",
+    "activemq.5672",
+    "activemq.61613",
+    "activemq.1883",
+    "activemq.61614"
+  ]
+}
+
+resource "workload-type-set" "activemq-digitalocean-5_11-ubuntu-20_04-set" {
+  code = "activemq-digitalocean-5.11-ubuntu-20.04-set"
+  category = "activemq"
+  workloadType = workload-type.activemq-digitalocean-5_11-ubuntu-20_04
+  priorityOrder = 0
+  containerCount = 1
+}
+
+resource "instance-type-layout" "activemq-digitalocean-5_11-ubuntu-20_04-single" {
+  code = "activemq-digitalocean-5.11-ubuntu-20.04-single"
+  name = "DigitalOcean ActiveMQ"
+  sortOrder = 10
+  description = "This will provision a single process with no redundancy"
+  instanceType = "activemq"
+  instanceVersion = "5.11"
+  serverCount = 1
+  portCount = 6
+  serverType = "vm"
+  hasAutoScale = true
+  enabled = true
+  workloads = [
+    container-type-set.activemq-digitalocean-5_11-ubuntu-20_04-set
+  ]
+  provisionType = "digitalocean"
+}

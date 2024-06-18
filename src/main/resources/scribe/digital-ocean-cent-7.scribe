@@ -1,0 +1,64 @@
+resource "workload-type" "centos-digitalocean-7" {
+  code = "centos-digitalocean-7"
+  shortName = "centos"
+  name = "CentOS 7"
+  ports = null
+  containerVersion = "7"
+  repositoryImage = ""
+  entryPoint = ""
+  statTypeCode = "vm"
+  logTypeCode = "centos"
+  checkTypeCode = null
+  category = "centos"
+  serverType = "vm"
+  providerType = "digitalocean"
+  virtualImage = virtual-image.digitalocean-image-morpheus-centos-7
+  provisionType = "digitalocean"
+  backupType = "digitaloceanSnapshot"
+  containerPorts = []
+  actions = [
+    "generic-remove-node"
+  ]
+  commEnabled = true
+  commType = "SSH"
+  commPort = 22
+}
+
+resource "workload-type-set" "centos-digitalocean-7-set" {
+  code = "centos-digitalocean-7-set"
+  category = "centos"
+  workloadType = workload-type.centos-digitalocean-7
+  priorityOrder = 0
+  dynamicCount = true
+  containerCount = 1
+}
+
+resource "instance-type-layout" "centos-digitalocean-7-single" {
+  code = "centos-digitalocean-7-single"
+  name = "DigitalOcean VM"
+  sortOrder = 73
+  description = "This will provision a single master vm in DigitalOcean"
+  instanceType = "centos"
+  instanceVersion = "7"
+  serverCount = 1
+  portCount = 1
+  serverType = "vm"
+  supportsConvertToManaged = true
+  enabled = true
+  creatable = true
+  workloads = [
+    workload-type-set.centos-digitalocean-7-set
+  ]
+  actions = [
+    "generic-add-node"
+  ]
+  provisionType = "digitalocean"
+}
+
+resource "scale-action" "centos-digitalocean-7-single" {
+  code = "centos-digitalocean-7-single"
+  scaleType = "action"
+  layout = instance-type-layout.centos-digitalocean-7-single
+  upAction = "generic-add-node"
+  downAction = "generic-remove-node"
+}

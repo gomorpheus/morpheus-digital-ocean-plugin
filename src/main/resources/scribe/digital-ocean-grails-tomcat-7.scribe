@@ -1,0 +1,67 @@
+resource "workload-type" "grails-digitalocean-7-ubuntu-20_04" {
+  code             = "grails-digitalocean-7-ubuntu-20.04"
+  shortName        = "grails"
+  name             = "Grails - Tomcat 7 JDK 7"
+  ports            = [8080]
+  containerVersion = "7"
+  repositoryImage  = ""
+  entryPoint       = "/entrypoint.sh"
+  statTypeCode     = "vm"
+  logTypeCode      = "grails"
+  checkTypeCode    = "webGetCheck"
+  mountPoint       = "/data"
+  mountConfig      = "/morpheus/config"
+  mountData        = "/morpheus/data"
+  mountLogs        = "/morpheus/logs"
+  category         = "grails"
+  serverType       = "vm"
+  providerType     = "digitalocean"
+  virtualImage     = virtual-image.digitalocean-image-morpheus-ubuntu-20_04
+  actions          = ["grails-remove-node"]
+  deploymentType   = "grails"
+  scripts          = [
+    "grails-vm-entrypoint-systemd", "grails-vm-stop-systemd", "grails-vm-start-systemd", "grails-deploy",
+    "grails-reconfigure"
+  ]
+  templates        = ["grails-config-2.5", "grails-datasource-2.5"]
+  provisionScript  = "morpheus.ansible.provision.grails-7-1"
+  provisionType    = "digitalocean"
+  backupType       = "digitaloceanSnapshot"
+  containerPorts   = ["grails.8080"]
+}
+
+resource "workload-type-set" "grails-digitalocean-7-ubuntu-20_04-set" {
+  code           = "grails-digitalocean-7-ubuntu-20.04-set"
+  category       = "grails"
+  workloadType   = workload-type.grails-digitalocean-7-ubuntu-20_04
+  priorityOrder  = 0
+  containerCount = 1
+  dynamicCount   = true
+}
+
+resource "instance-type-layout" "grails-digitalocean-7-ubuntu-20_04-single" {
+  code            = "grails-digitalocean-7-ubuntu-20.04-single"
+  name            = "DigitalOcean Grails - Tomcat 7 JDK 7"
+  sortOrder       = 10
+  description     = "This will provision a single process with no redundancy"
+  instanceType    = "grails"
+  instanceVersion = "Tomcat 7 jdk 7"
+  serverCount     = 1
+  portCount       = 1
+  serverType      = "vm"
+  hasAutoScale    = true
+  enabled         = true
+  workloads       = [
+    workload-type-set.grails-digitalocean-7-ubuntu-20_04-set
+  ]
+  actions       = ["grails-add-node"]
+  provisionType = "digitalocean"
+}
+
+resource "scale-action" "grails-digitalocean-7-ubuntu-20_04-scale" {
+  code       = "grails-digitalocean-7-ubuntu-20.04-single"
+  scaleType  = "action"
+  layout     = instance-type-layout.grails-digitalocean-7-ubuntu-20_04-single
+  upAction   = "grails-add-node"
+  downAction = "grails-remove-node"
+}

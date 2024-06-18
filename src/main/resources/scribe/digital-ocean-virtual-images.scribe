@@ -5,6 +5,7 @@ resource "virtual-image" "digitalocean-image-morpheus-ubuntu-14_04" {
   sshPassword        = null
   name               = "Ubuntu 14.04 LTS (Digital Ocean Marketplace)"
   imageType          = "qcow2"
+  virtualImageType   = "qcow2"
   systemImage        = true
   installAgent       = true
   computeServerImage = true
@@ -22,6 +23,7 @@ resource "virtual-image" "digitalocean-image-morpheus-ubuntu-16_04" {
   sshPassword        = null
   name               = "Ubuntu 16.04 LTS (Digital Ocean Marketplace)"
   imageType          = "qcow2"
+  virtualImageType   = "qcow2"
   systemImage        = true
   installAgent       = true
   computeServerImage = true
@@ -39,6 +41,7 @@ resource "virtual-image" "digitalocean-image-morpheus-ubuntu-18_04" {
   sshPassword        = null
   name               = "Ubuntu 18.04 LTS (Digital Ocean Marketplace)"
   imageType          = "qcow2"
+  virtualImageType   = "qcow2"
   systemImage        = true
   installAgent       = true
   computeServerImage = true
@@ -56,6 +59,7 @@ resource "virtual-image" "digitalocean-image-morpheus-ubuntu-20_04" {
   sshPassword        = null
   name               = "Ubuntu 20.04 LTS (Digital Ocean Marketplace)"
   imageType          = "qcow2"
+  virtualImageType   = "qcow2"
   systemImage        = true
   installAgent       = true
   computeServerImage = true
@@ -73,6 +77,7 @@ resource "virtual-image" "digitalocean-image-morpheus-ubuntu-22_04" {
   sshPassword        = null
   name               = "Ubuntu 22.04 LTS (Digital Ocean Marketplace)"
   imageType          = "qcow2"
+  virtualImageType   = "qcow2"
   systemImage        = true
   installAgent       = true
   computeServerImage = true
@@ -88,6 +93,7 @@ resource "virtual-image" "digitalocean-image-morpheus-debian-9" {
   sshPassword        = null
   name               = "Debian 9 (Digital Ocean Marketplace)"
   imageType          = "qcow2"
+  virtualImageType   = "qcow2"
   systemImage        = true
   installAgent       = true
   computeServerImage = true
@@ -103,6 +109,7 @@ resource "virtual-image" "digitalocean-image-morpheus-debian-10" {
   sshPassword        = null
   name               = "Debian 10 (Digital Ocean Marketplace)"
   imageType          = "qcow2"
+  virtualImageType   = "qcow2"
   systemImage        = true
   installAgent       = true
   computeServerImage = true
@@ -118,6 +125,7 @@ resource "virtual-image" "digitalocean-image-morpheus-debian-11" {
   sshPassword        = null
   name               = "Debian 11 (Digital Ocean Marketplace)"
   imageType          = "qcow2"
+  virtualImageType   = "qcow2"
   systemImage        = true
   installAgent       = true
   computeServerImage = true
@@ -133,6 +141,7 @@ resource "virtual-image" "digitalocean-image-morpheus-centos-7_3" {
   sshPassword        = null
   name               = "CentOS 7 (Digital Ocean Marketplace)"
   imageType          = "qcow2"
+  virtualImageType   = "qcow2"
   systemImage        = true
   installAgent       = true
   computeServerImage = true
@@ -148,6 +157,7 @@ resource "virtual-image" "digitalocean-image-morpheus-centos-7" {
   sshPassword        = null
   name               = "CentOS 7 (Digital Ocean Marketplace)"
   imageType          = "qcow2"
+  virtualImageType   = "qcow2"
   systemImage        = true
   installAgent       = true
   computeServerImage = true
@@ -163,6 +173,7 @@ resource "virtual-image" "digitalocean-image-morpheus-centos-8-stream" {
   sshPassword        = null
   name               = "CentOS 8 Stream (Digital Ocean Marketplace)"
   imageType          = "qcow2"
+  virtualImageType   = "qcow2"
   systemImage        = true
   installAgent       = true
   computeServerImage = true
@@ -178,6 +189,7 @@ resource "virtual-image" "digitalocean-image-morpheus-centos-9-stream" {
   sshPassword        = null
   name               = "CentOS 9 Stream (Digital Ocean Marketplace)"
   imageType          = "qcow2"
+  virtualImageType   = "qcow2"
   systemImage        = true
   installAgent       = true
   computeServerImage = true
@@ -193,6 +205,7 @@ resource "virtual-image" "digitalocean-image-morpheus-rocky-8_4" {
   sshPassword        = null
   name               = "Rocky Linux 8.4 (Digital Ocean Marketplace)"
   imageType          = "qcow2"
+  virtualImageType   = "qcow2"
   systemImage        = true
   installAgent       = true
   computeServerImage = true
@@ -208,6 +221,7 @@ resource "virtual-image" "digitalocean-image-morpheus-rocky-8_6" {
   sshPassword        = null
   name               = "Rocky Linux 8.6 (Digital Ocean Marketplace)"
   imageType          = "qcow2"
+  virtualImageType   = "qcow2"
   systemImage        = true
   installAgent       = true
   computeServerImage = true
@@ -223,6 +237,7 @@ resource "virtual-image" "digitalocean-image-morpheus-rocky-9" {
   sshPassword        = null
   name               = "Rocky Linux 9 (Digital Ocean Marketplace)"
   imageType          = "qcow2"
+  virtualImageType   = "qcow2"
   systemImage        = true
   installAgent       = true
   computeServerImage = true
@@ -238,6 +253,7 @@ resource "virtual-image" "digitalocean-image-morpheus-almalinux-9" {
   sshPassword        = null
   name               = "AlmaLinux 9 (Digital Ocean Marketplace)"
   imageType          = "qcow2"
+  virtualImageType   = "qcow2"
   systemImage        = true
   installAgent       = true
   computeServerImage = true

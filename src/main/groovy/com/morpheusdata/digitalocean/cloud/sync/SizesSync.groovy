@@ -42,6 +42,8 @@ class SizesSync {
 	def execute() {
 		log.debug("SizesSync execute: ${cloud}")
 		try {
+			ProvisionProvider provisionProvider = (ProvisionProvider)this.plugin.getProviderByCode('digitalocean-provision-provider')
+			ProvisionType provisionType = new ProvisionType(code: provisionProvider.provisionTypeCode)
 			String apiKey = plugin.getAuthConfig(cloud).doApiKey
 			ServiceResponse response = apiService.listDropletSizes(apiKey)
 			List<ServicePlan> servicePlans = []
@@ -49,6 +51,7 @@ class SizesSync {
 				def name = getNameForSize(it)
 				def servicePlan = new ServicePlan(
 						code: "${SIZE_PREFIX}${it.slug}".toString(),
+						active: cloud.defaultPlanSyncActive,
 						provisionTypeCode: 'digitalocean',
 						description: name,
 						name: name,
@@ -61,7 +64,8 @@ class SizesSync {
 						price_monthly: new BigDecimal((it.price_monthly ?: '0.0').toString()),
 						price_hourly: new BigDecimal((it.price_hourly ?: '0.0').toString()),
 						refType: 'ComputeZone',
-						refId: cloud.id
+						refId: cloud.id,
+						provisionType: provisionType
 				)
 				servicePlans << servicePlan
 			}
@@ -69,9 +73,7 @@ class SizesSync {
 			log.debug("Service Plans to sync, total: ${servicePlans.size()}, codes: ${servicePlans.collect { it.code}}")
 
 			if (servicePlans) {
-				ProvisionProvider provisionProvider = (ProvisionProvider)this.plugin.getProviderByCode('digitalocean-provision-provider')
-				ProvisionType provisionType = new ProvisionType(code: provisionProvider.provisionTypeCode)
-				Observable<ServicePlanIdentityProjection> domainPlans = morpheusContext.servicePlan.listSyncProjections(provisionType)
+				Observable<ServicePlanIdentityProjection> domainPlans = morpheusContext.async.servicePlan.listSyncProjections(provisionType)
 				SyncTask<ServicePlanIdentityProjection, ServicePlan, ServicePlan> syncTask = new SyncTask(domainPlans, servicePlans)
 				syncTask.addMatchFunction { ServicePlanIdentityProjection projection, ServicePlan apiPlan ->
 					return projection.code == apiPlan.code
@@ -79,9 +81,9 @@ class SizesSync {
 					def deleteIds = deleteList.collect { it.id }
 					log.debug("Removing ${deleteList.size()} service plans")
 					List<ServicePlanPriceSet> servicePlanPriceSetDeleteList = morpheusContext.async.servicePlanPriceSet.listByServicePlanIds(deleteIds).toList().blockingGet()
-					Boolean servicePlanPriceSetDeleteResult = morpheusContext.async.servicePlanPriceSet.remove(servicePlanPriceSetDeleteList).blockingGet()
+					Boolean servicePlanPriceSetDeleteResult = morpheusContext.services.servicePlanPriceSet.bulkRemove(servicePlanPriceSetDeleteList)
 					if(servicePlanPriceSetDeleteResult) {
-						morpheusContext.async.servicePlan.remove(deleteList).blockingGet()
+						morpheusContext.services.servicePlan.bulkRemove(deleteList)
 					} else {
 						log.error("Failed to delete ServicePlanPriceSets associated to ServicePlans")
 					}
@@ -90,7 +92,7 @@ class SizesSync {
 						List chunkedList = createList.take(50)
 						createList = createList.drop(50)
 						log.debug("Adding ${chunkedList.size()} service plans")
-						Boolean servicePlanCreateSuccess = morpheusContext.async.servicePlan.bulkCreate(chunkedList).blockingGet()
+						Boolean servicePlanCreateSuccess = morpheusContext.services.servicePlan.bulkCreate(chunkedList)
 						if(servicePlanCreateSuccess) {
 							syncPlanPrices(chunkedList)
 						}

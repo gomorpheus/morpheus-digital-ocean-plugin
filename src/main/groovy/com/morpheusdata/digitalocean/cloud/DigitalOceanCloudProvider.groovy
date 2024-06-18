@@ -10,6 +10,8 @@ import com.morpheusdata.core.providers.CloudProvider
 import com.morpheusdata.core.MorpheusContext
 import com.morpheusdata.core.Plugin
 import com.morpheusdata.core.providers.ProvisionProvider
+import com.morpheusdata.digitalocean.cloud.sync.VPCSync
+import com.morpheusdata.digitalocean.cloud.sync.VirtualMachineSync
 import com.morpheusdata.model.*
 import com.morpheusdata.request.ValidateCloudRequest
 import com.morpheusdata.response.ServiceResponse
@@ -19,8 +21,6 @@ import groovy.util.logging.Slf4j
 class DigitalOceanCloudProvider implements CloudProvider {
 	DigitalOceanPlugin plugin
 	MorpheusContext morpheusContext
-
-	public static String LINUX_VIRTUAL_IMAGE_CODE = 'digitalOceanLinux'
 
 	DigitalOceanCloudProvider(DigitalOceanPlugin plugin, MorpheusContext context) {
 		this.plugin = plugin
@@ -69,7 +69,7 @@ class DigitalOceanCloudProvider implements CloudProvider {
 
 	@Override
 	Boolean hasComputeZonePools() {
-		return false
+		return true
 	}
 
 	@Override
@@ -100,6 +100,11 @@ class DigitalOceanCloudProvider implements CloudProvider {
 	@Override
 	Boolean supportsDistributedWorker() {
 		return false
+	}
+
+	@Override
+	Boolean provisionRequiresResourcePool() {
+		return true
 	}
 
 	@Override
@@ -146,14 +151,39 @@ class DigitalOceanCloudProvider implements CloudProvider {
 				name: 'Datacenter',
 				code: 'zoneType.digitalocean.datacenter',
 				fieldName: 'datacenter',
-				optionSourceType: 'digitalOcean', // only required until embedded is removed
+				optionSourceType: 'digitalocean',
 				optionSource: 'digitalOceanDataCenters',
 				displayOrder: 30,
 				fieldCode: 'gomorpheus.optiontype.Datacenter',
 				fieldLabel: 'Datacenter',
 				required: true,
 				inputType: OptionType.InputType.SELECT,
-				dependsOn: 'config.apiKey, apiKey, credential',
+				dependsOn: 'config.username, config.apiKey, credential.type, credential.username, credential.password',
+				fieldContext: 'config'
+		)
+		options << new OptionType(
+				name: 'VPC',
+				code: 'zoneType.digitalocean.vpc',
+				fieldName: 'vpc',
+				optionSourceType: 'digitalOcean',
+				optionSource: 'digitalOceanVpc',
+				displayOrder: 40,
+				fieldCode: 'gomorpheus.optiontype.Vpc',
+				fieldLabel: 'VPC',
+				required: true,
+				inputType: OptionType.InputType.SELECT,
+				dependsOn: 'config.datacenter',
+				fieldContext: 'config'
+		)
+
+		options << new OptionType(
+				name: 'Inventory Existing Instances',
+				code: 'digitalocean-import-existing',
+				fieldName: 'importExisting',
+				displayOrder: 90,
+				fieldLabel: 'Inventory Existing Instances',
+				required: false,
+				inputType: OptionType.InputType.CHECKBOX,
 				fieldContext: 'config'
 		)
 		return options
@@ -178,7 +208,7 @@ class DigitalOceanCloudProvider implements CloudProvider {
 				),
 
 				//docker
-				new ComputeServerType(code: LINUX_VIRTUAL_IMAGE_CODE, name: 'DigitalOcean Docker Host', description: '', platform: PlatformType.linux, nodeType:'morpheus-node',
+				new ComputeServerType(code:'digitalOceanLinux', name: 'DigitalOcean Docker Host', description: '', platform: PlatformType.linux, nodeType:'morpheus-node',
 						enabled: true, selectable: false, externalDelete: true, managed: true, controlPower: true, controlSuspend: false, creatable: true, computeService: null, containerEngine: "docker",
 						displayOrder: 16, hasAutomation: true, reconfigureSupported: true, provisionTypeCode: 'digitalocean',
 						containerHypervisor: true, bareMetalHost: false, vmHypervisor: false, agentType: ComputeServerType.AgentType.host, clusterType: ComputeServerType.ClusterType.docker,
@@ -189,15 +219,15 @@ class DigitalOceanCloudProvider implements CloudProvider {
 				//kubernetes
 				new ComputeServerType(code: 'digitalOceanKubeMaster', name: 'Digital Ocean Kubernetes Master', description: '', platform: PlatformType.linux, nodeType:'kube-master',
 					reconfigureSupported: true, enabled: true, selectable: false, externalDelete: true, managed: true, controlPower: true, controlSuspend: true, creatable: true,
-						supportsConsoleKeymap: true, computeService: null, displayOrder: 10,
-						hasAutomation: true, containerHypervisor: true, bareMetalHost: false, vmHypervisor: false, agentType: ComputeServerType.AgentType.host, clusterType: ComputeServerType.ClusterType.kubernetes,
+						supportsConsoleKeymap: true, computeService: null, displayOrder: 10, provisionTypeCode: 'digitalocean',
+						hasAutomation: true, containerHypervisor: true, bareMetalHost: false, vmHypervisor: false, agentType: ComputeServerType.AgentType.guest, clusterType: ComputeServerType.ClusterType.kubernetes,
 						computeTypeCode: 'kube-master',
 						optionTypes: []
 				),
 				new ComputeServerType(code: 'digitalOceanKubeWorker', name: 'Digital Ocean Kubernetes Worker', description: '', platform: PlatformType.linux, nodeType:'kube-worker',
 						reconfigureSupported: true, enabled: true, selectable: false, externalDelete: true, managed: true, controlPower: true, controlSuspend: true, creatable: true,
-						supportsConsoleKeymap: true, computeService: null, displayOrder: 10,
-						hasAutomation: true, containerHypervisor: true, bareMetalHost: false, vmHypervisor: false, agentType: ComputeServerType.AgentType.host, clusterType: ComputeServerType.ClusterType.kubernetes,
+						supportsConsoleKeymap: true, computeService: null, displayOrder: 10, provisionTypeCode: 'digitalocean',
+						hasAutomation: true, containerHypervisor: true, bareMetalHost: false, vmHypervisor: false, agentType: ComputeServerType.AgentType.guest, clusterType: ComputeServerType.ClusterType.kubernetes,
 						computeTypeCode: 'kube-worker',
 						optionTypes: []
 				),
@@ -249,18 +279,18 @@ class DigitalOceanCloudProvider implements CloudProvider {
 	}
 
 	@Override
-	ServiceResponse validate(Cloud zoneInfo, ValidateCloudRequest validateCloudRequest) {
+	ServiceResponse validate(Cloud cloud, ValidateCloudRequest validateCloudRequest) {
 		DigitalOceanApiService apiService = new DigitalOceanApiService()
-		log.debug("validating Cloud: ${zoneInfo.code}, ${validateCloudRequest.credentialType} ${validateCloudRequest.credentialUsername} ${validateCloudRequest.credentialPassword}")
-		if (!zoneInfo.configMap.datacenter) {
+		log.debug("validating Cloud: ${cloud.code}, ${validateCloudRequest.credentialType} ${validateCloudRequest.credentialUsername} ${validateCloudRequest.credentialPassword}")
+		if (!cloud.configMap.datacenter) {
 			return new ServiceResponse(success: false, msg: 'Choose a datacenter')
 		}
 		def apiKey
 		def username
 
 		if(validateCloudRequest.credentialType == 'local') {
-			apiKey = zoneInfo.configMap.apiKey
-			username = zoneInfo.configMap.username
+			apiKey = cloud.configMap.apiKey
+			username = cloud.configMap.username
 		} else if (validateCloudRequest.credentialType && validateCloudRequest.credentialType.isNumber()) {
 			def credentialId = validateCloudRequest.credentialType.toLong()
 			AccountCredential accountCredential = morpheusContext.accountCredential.get(credentialId).blockingGet()
@@ -325,11 +355,12 @@ class DigitalOceanCloudProvider implements CloudProvider {
 		def rtn = ServiceResponse.prepare()
 		log.debug("Short refresh cloud ${cloud.code}")
 		apiService = apiService ?: new DigitalOceanApiService()
-		def syncDate = new Date()
 		String apiKey = plugin.getAuthConfig(cloud).doApiKey
 		ServiceResponse testResult = apiService.testConnection(apiKey)
 		if(testResult.success) {
 			(new ImagesSync(plugin, cloud, apiService, true)).execute()
+			(new VPCSync(plugin, cloud, apiService)).execute()
+			new VirtualMachineSync(plugin, cloud, apiService, this).execute()
 			rtn.success = true
 		} else {
 			if(testResult.data.invalidLogin) {
@@ -358,6 +389,7 @@ class DigitalOceanCloudProvider implements CloudProvider {
 			(new DatacentersSync(plugin, cloud, apiService)).execute()
 			(new SizesSync(plugin, cloud, apiService)).execute()
 			(new ImagesSync(plugin, cloud, apiService, false)).execute()
+			new VirtualMachineSync(plugin, cloud, apiService, this).execute()
 		} else {
 			if(testResult.data.invalidLogin) {
 				morpheusContext.cloud.updateZoneStatus(cloud, Cloud.Status.offline, 'Error refreshing cloud: invalid credentials', syncDate)

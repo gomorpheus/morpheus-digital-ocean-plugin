@@ -1,0 +1,69 @@
+resource "workload-type" "tomcat-digitalocean-7-ubuntu-20_04" {
+  code = "tomcat-digitalocean-7-ubuntu-20.04"
+  shortName = "tomcat"
+  name = "Tomcat 7"
+  ports = [8080]
+  containerVersion = "7"
+  repositoryImage = ""
+  entryPoint = "/entrypoint.sh"
+  statTypeCode = "vm"
+  logTypeCode = "tomcat"
+  checkTypeCode = "webGetCheck"
+  mountPoint = "/morpheus"
+  mountData = "/morpheus/data"
+  mountConfig = "/morpheus/config"
+  mountLogs = "/morpheus/logs"
+  category = "tomcat"
+  serverType = "vm"
+  providerType = "digitalocean"
+  virtualImage = virtual-image.digitalocean-image-morpheus-ubuntu-20_04
+  scripts = []
+  templates = []
+  provisionType = "digitalocean"
+  backupType = "digitaloceanSnapshot"
+  actions = [
+    "generic-remove-node"
+  ]
+  containerPorts = [
+    "tomcat.8080"
+  ]
+}
+
+resource "workload-type-set" "tomcat-digitalocean-7-ubuntu-20_04-set" {
+  code = "tomcat-digitalocean-7-ubuntu-20.04-set"
+  category = "tomcat"
+  dynamicCount = true
+  workloadType = workload-type.tomcat-digitalocean-7-ubuntu-20_04
+  priorityOrder = 0
+  containerCount = 1
+}
+
+resource "instance-type-layout" "tomcat-digitalocean-7-ubuntu-20_04-single" {
+  code = "tomcat-digitalocean-7-ubuntu-20.04-single"
+  name = "DigitalOcean Tomcat"
+  sortOrder = 10
+  description = "This will provision a single process with no redundancy"
+  instanceType = "tomcat"
+  instanceVersion = "Tomcat 7 jdk 7"
+  serverCount = 1
+  portCount = 1
+  serverType = "vm"
+  hasAutoScale = true
+  enabled = true
+  creatable = true
+  workloads = [
+    workload-type-set.tomcat-digitalocean-7-ubuntu-20_04-set
+  ]
+  actions = [
+    "tomcat-add-node"
+  ]
+  provisionType = "digitalocean"
+}
+
+resource "scale-action" "tomcat-digitalocean-7-ubuntu-20_04-scale" {
+  code = "tomcat-digitalocean-7-ubuntu-20.04-scale"
+  scaleType = "action"
+  layout = instance-type-layout.tomcat-digitalocean-7-ubuntu-20_04-single
+  upAction = "generic-add-node"
+  downAction = "generic-remove-node"
+}

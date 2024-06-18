@@ -8,9 +8,9 @@ buildscript {
 		maven { url "https://nexus.bertramlabs.com/content/repositories/publicReleases" }
 	}
 	dependencies {
-		classpath "com.github.jengelman.gradle.plugins:shadow:6.0.0"
+		classpath 'com.github.johnrengelman:shadow:8.1.1'
 		classpath "com.bertramlabs.plugins:asset-pipeline-gradle:$assetPipelineVersion"
-		classpath "com.morpheusdata:morpheus-plugin-gradle:$morphPluginApiVersion"
+		classpath "com.morpheusdata:morpheus-plugin-gradle:$morphPluginGradleVersion"
 	}
 }
 
@@ -52,6 +52,9 @@ dependencies {
 	testImplementation 'io.reactivex.rxjava3:rxjava:3.1.8'
 	testImplementation "org.slf4j:slf4j-nop:$slf4jVersion"
 	testImplementation "org.slf4j:slf4j-parent:$slf4jVersion"
+	testImplementation("com.bertramlabs.plugins:karman-core:2.0.9") {
+		exclude module: 'groovy-all'
+	}
 
 	testImplementation "org.codehaus.groovy:groovy-all:$groovyVersion"
 	testImplementation 'net.bytebuddy:byte-buddy:1.9.3'
@@ -98,7 +101,7 @@ test {
 }
 
 shadowJar {
-	// archiveFileName = "${baseName}-${version}.mpl"
+	// archiveFileName = "${project.name}-${version}.jar"
 }
 
 tasks.assemble.dependsOn tasks.shadowJar

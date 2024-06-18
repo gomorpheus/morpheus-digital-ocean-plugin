@@ -1,0 +1,148 @@
+# master
+resource "workload-type" "kubernetes-1_28-ha-master-ubuntu-22_04-digitalocean-amd64" {
+  code             = "kubernetes-1.28-ha-master-ubuntu-22.04-digitalocean-amd64"
+  shortName        = "kubernetes-ubuntu"
+  name             = "Kubernetes 1.28 HA Master Cluster on Ubuntu 22.04"
+  containerVersion = "1.28.3"
+  repositoryImage  = ""
+  imageCode        = "morpheus kubernetes 1.28 on ubuntu 22.04"
+  entryPoint       = ""
+  mountLogs        = "/var/log"
+  statTypeCode     = "server"
+  logTypeCode      = "ubuntu"
+  showServerLogs   = true
+  category         = "kubernetes"
+  cloneType        = "ubuntu"
+  priorityOrder    = 0
+  serverType       = "vm"
+  providerType     = "digitalocean"
+  checkTypeCode    = "vmCheck"
+  virtualImage     = virtual-image.digitalocean-image-morpheus-ubuntu-22_04
+  containerPorts   = ["ubuntu.22"]
+  provisionType    = "digitalocean"
+  scripts          = [
+    "setup-disks-v1", "kubernetes-1-28-ubuntu-install-v1", "kubernetes-1-28-kubeadm-cluster-master-init-v1",
+    "kubernetes-1-28-kubeadm-cluster-master-setup-v1", "kube-kubeadm-cluster-shared-key",
+    "kube-ectd-encrypt-install-add-master-script-v1", "k8-config-save",
+    "k8-cypher"
+  ]
+  templates = ["kubernetes-etcd-encrypt-install-master"]
+}
+
+# add master vm
+resource "workload-type" "kubernetes-1_28-ha-add-master-ubuntu-22_04-digitalocean-amd64" {
+  code             = "kubernetes-1.28-ha-add-master-ubuntu-22.04-digitalocean-amd64"
+  shortName        = "kubernetes-ubuntu"
+  name             = "Kubernetes 1.28 HA Add Master Cluster on Ubuntu 22.04"
+  containerVersion = "1.28.3"
+  repositoryImage  = ""
+  imageCode        = "morpheus kubernetes 1.28 on ubuntu 22.04"
+  entryPoint       = ""
+  mountLogs        = "/var/log"
+  statTypeCode     = "server"
+  logTypeCode      = "ubuntu"
+  showServerLogs   = true
+  category         = "kubernetes"
+  cloneType        = "ubuntu"
+  priorityOrder    = 0
+  serverType       = "vm"
+  providerType     = "digitalocean"
+  checkTypeCode    = "vmCheck"
+  virtualImage     = virtual-image.digitalocean-image-morpheus-ubuntu-22_04
+  containerPorts   = ["ubuntu.22"]
+  provisionType    = "digitalocean"
+  scripts          = [
+    "setup-disks-v1", "kube-kubeadm-cluster-shared-key", "kubernetes-1-28-ubuntu-install-v2", "k8-config-fetch",
+    "kubernetes-1-28-kubeadm-cluster-add-master-setup-v1", "kubernetes-kubeadm-cluster-1-28-add-master-init-v1",
+    "kube-ectd-encrypt-install-add-master-script-v1"
+  ]
+  templates = ["k8-cypher", "kubernetes-etcd-encrypt-install-master"]
+}
+
+# master set
+resource "compute-type-set" "kubernetes-1_28-ha-master-ubuntu-22_04-digitalocean-amd64-set" {
+  code             = "kubernetes-1.28-ha-master-ubuntu-22.04-digitalocean-amd64-set"
+  name             = "kubernetes master"
+  workloadType    = workload-type.kubernetes-1_28-ha-master-ubuntu-22_04-digitalocean-amd64
+  computeServerType= "digitaloceanKubeMaster"
+  category         = "ubuntu"
+  priorityOrder    = 0
+  dynamicCount     = false
+  forceNameIndex   = true
+  nodeCount        = 1
+  nameSuffix       = "-master"
+  nodeType         = "master"
+  installContainerRuntime = false
+  installStorageRuntime = false
+}
+
+# add master set
+resource "compute-type-set" "kubernetes-1_28-ha-add-master-ubuntu-22_04-digitalocean-amd64-set" {
+  code             = "kubernetes-1.28-ha-add-master-ubuntu-22.04-digitalocean-amd64-set"
+  name             = "kubernetes master"
+  workloadType    = workload-type.kubernetes-1_28-ha-add-master-ubuntu-22_04-digitalocean-amd64
+  computeServerType= "digitaloceanKubeMaster"
+  category         = "ubuntu"
+  priorityOrder    = 1
+  dynamicCount     = false
+  forceNameIndex   = true
+  nodeCount        = 1
+  nameSuffix       = "-master"
+  nodeType         = "master"
+  installContainerRuntime = false
+  installStorageRuntime = false
+}
+
+# add final setup
+resource "compute-type-set" "kubernetes-1_28-ha-final-master-ubuntu-22_04-digitalocean-amd64-set" {
+  code             = "kubernetes-1.28-ha-final-master-ubuntu-22.04-digitalocean-amd64-set"
+  name             = "kubernetes master"
+  workloadType    = workload-type.kubernetes-1_28-ha-add-master-ubuntu-22_04-digitalocean-amd64
+  computeServerType= "digitaloceanKubeMaster"
+  category         = "ubuntu"
+  priorityOrder    = 2
+  dynamicCount     = false
+  forceNameIndex   = true
+  nodeCount        = 1
+  nameSuffix       = "-master"
+  nodeType         = "master"
+  installContainerRuntime = false
+  installStorageRuntime = false
+}
+
+# layout
+resource "compute-type-layout" "kubernetes-1_28-ubuntu-22_04-digitalocean-amd64" {
+  code = "kubernetes-1.28-ubuntu-22.04-digitalocean-amd64"
+  enabled = true
+  name = "MKS Kubernetes 1.28 HA Cluster on Ubuntu 22.04"
+  sortOrder = 105
+  computeVersion = "22.04"
+  clusterVersion = "1.28.x"
+  description = "provision a high availability kubernetes 1.28 cluster on ubuntu 22.04"
+  type = "digitaloceanKubeMaster"
+  serverCount = 6
+  memoryRequirement = 1073741824
+  hasAutoScale = true
+  containerRuntime = "containerd"
+  networkRuntime = "calico"
+  computeServers = [
+    compute-type-set.kubernetes-1_28-ha-master-ubuntu-22_04-digitalocean-amd64-set,
+    compute-type-set.kubernetes-1_28-ha-add-master-ubuntu-22_04-digitalocean-amd64-set,
+    compute-type-set.kubernetes-1_28-ha-final-master-ubuntu-22_04-digitalocean-amd64-set,
+    compute-type-set.kubernetes-1_28-ubuntu-22_04-worker-digitalocean-amd64-set
+  ]
+  groupType = "kubernetes-cluster"
+  provisionType =  "digitalocean"
+  optionTypes = [
+    "kubernetes.master.podCidr",
+    "kubernetes.master.serviceCidr"
+  ]
+  specTemplates = []
+  packages = [
+    "kubernetes-calico-3-26-0-package",
+    "kubernetes-rook-1-13-package",
+    "kubernetes-fluentbit-1-8-9-1-modified-package",
+    "kubernetes-prometheus-0-9-modified-package",
+    "kubernetes-nginx-ingress-operator-1-9-4-package"
+  ]
+}

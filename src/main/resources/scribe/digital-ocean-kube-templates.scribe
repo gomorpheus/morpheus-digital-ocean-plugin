@@ -1,0 +1,87 @@
+resource "workload-type" "kubernetes-ubuntu-22_04-digitalocean-amd64" {
+  code             = "kubernetes-ubuntu-22_04-digitalocean-amd64"
+  shortName        = "kubernetes-ubuntu"
+  name             = "DigitalOcean Kubernetes Cluster on Ubuntu 22.04"
+  containerVersion = "22.04"
+  repositoryImage  = ""
+  imageCode        = "digitalocean morpheus kubernetes on ubuntu 22.04"
+  entryPoint       = ""
+  mountLogs        = "/var/log"
+  statTypeCode     = "server"
+  logTypeCode      = "ubuntu"
+  showServerLogs   = true
+  category         = "kubernetes"
+  cloneType        = "ubuntu"
+  priorityOrder    = 0
+  serverType       = "vm"
+  providerType     = "digitalocean"
+  checkTypeCode    = "vmCheck"
+  virtualImage     = virtual-image.digitalocean-image-morpheus-ubuntu-22_04
+  containerPorts   = ["ubuntu.22"]
+  provisionType    = "digitalocean"
+  scripts          = [
+    "setup-disks-v1", "kube-ubuntu-22-setup-script-v1", "kube-adm-master-setup-script-v1", "kubernetes-ectd-encrypt-install-master-script-v1"
+  ]
+  templates = ["do-kubeadm-cluster-master-init","kubernetes-etcd-encrypt-install-master","replace-external-ip"]
+}
+
+# worker vm
+resource "workload-type" "kubernetes-ubuntu-22_04-worker-digitalocean-amd64" {
+  code             = "kubernetes-ubuntu-22_04-worker-digitalocean-amd64"
+  shortName        = "kubernetes-worker-ubuntu"
+  name             = "DigitalOcean Kubernetes Worker on Ubuntu 22.04"
+  containerVersion = "22.04"
+  repositoryImage  = ""
+  imageCode        = "digitalocean morpheus kubernetes on ubuntu 22.04"
+  entryPoint       = ""
+  mountLogs        = "/var/log"
+  statTypeCode     = "server"
+  logTypeCode      = "ubuntu"
+  showServerLogs   = true
+  category         = "kubernetes"
+  cloneType        = "ubuntu"
+  priorityOrder    = 0
+  serverType       = "vm"
+  providerType     = "digitalocean"
+  checkTypeCode    = "vmCheck"
+  virtualImage     = virtual-image.digitalocean-image-morpheus-ubuntu-22_04
+  containerPorts   = ["ubuntu.22"]
+  provisionType    = "digitalocean"
+  scripts          = [
+    "setup-disks-v1", "kube-ubuntu-22-setup-script-v1", "kubernetes-worker-join-v1"
+  ]
+  templates = []
+}
+
+# master set
+resource "compute-type-set" "kubernetes-ubuntu-22_04-digitalocean-amd64-set" {
+  code             = "kubernetes-ubuntu-22_04-digitalocean-amd64-set"
+  name             = "kubernetes master"
+  workloadType      = workload-type.kubernetes-ubuntu-22_04-digitalocean-amd64
+  computeServerType = compute-server-type.digitaloceanKubeMaster
+  category         = "ubuntu"
+  priorityOrder    = 0
+  dynamicCount     = false
+  nodeCount        = 1
+  nameSuffix       = "-master"
+  nodeType         = "master"
+  installContainerRuntime = false
+  installStorageRuntime = false
+}
+
+# worker set
+resource "compute-type-set" "kubernetes-ubuntu-22_04-worker-digitalocean-amd64-set" {
+  code             = "kubernetes-ubuntu-22_04-worker-digitalocean-amd64-set"
+  name             = "kubernetes worker"
+  containerType    = workload-type.kubernetes-ubuntu-22_04-worker-digitalocean-amd64
+  computeServerType= "digitaloceanKubeWorker"
+  category         = "ubuntu"
+  priorityOrder    = 1
+  dynamicCount     = true
+  nodeCount        = 3
+  nameSuffix       = "-worker"
+  nodeType         = "worker"
+  canAddNodes      = true
+  installContainerRuntime = false
+  installStorageRuntime = false
+}

@@ -1,0 +1,157 @@
+// Apache 2.4 on Ubuntu 20.04
+resource "workload-type" "apache-digitalocean-2_4-ubuntu-20_04" {
+  code = "apache-digitalocean-2.4-ubuntu-20.04"
+  shortName = "apache"
+  name = "Apache 2.4"
+  ports = [80, 443]
+  containerVersion = "2.4"
+  repositoryImage = ""
+  entryPoint = "/entrypoint.sh"
+  statTypeCode = "vm"
+  logTypeCode = "apache"
+  checkTypeCode = "webGetCheck"
+  mountPoint = "/data"
+  mountConfig = "/morpheus/config"
+  mountData = "/var/www/html"
+  mountLogs = "/var/log/apache2"
+  category = "apache"
+  cloneType = "apache"
+  priorityOrder = 0
+  serverType = "vm"
+  providerType = "digitalocean"
+  virtualImage = virtual-image.digitalocean-image-morpheus-ubuntu-20_04
+  actions = [
+    "generic-remove-node"
+  ]
+  deploymentType = "default"
+  scripts = [
+    "apache-2.4-vm-entrypoint",
+    "apache-2.4-vm-stop",
+    "apache-2.4-vm-start"
+  ]
+  provisionScript = "morpheus.ansible.provision.apache-2_4-morph.0.1"
+  provisionType = "digitalocean"
+  backupType = "digitaloceanSnapshot"
+  containerPorts = [
+    "apache.80",
+    "apache.443"
+  ]
+}
+
+resource "workload-type-set" "apache-digitalocean-2_4-ubuntu-20_04-set" {
+  code = "apache-digitalocean-2.4-ubuntu-20.04-set"
+  category = "apache"
+  dynamicCount = true
+  workloadType = workload-type.apache-digitalocean-2_4-ubuntu-20_04
+  priorityOrder = 0
+  containerCount = 1
+}
+
+resource "instance-type-layout" "apache-digitalocean-2_4-ubuntu-20_04-single" {
+  code = "apache-digitalocean-2.4-ubuntu-20.04-single"
+  name = "DigitalOcean Apache"
+  sortOrder = 10
+  description = "This will provision a single process with no redundancy"
+  instanceType = "apache"
+  instanceVersion = "2.4"
+  serverCount = 1
+  portCount = 2
+  serverType = "vm"
+  hasAutoScale = true
+  enabled = true
+  creatable = true
+  workloads = [
+    workload-type-set.apache-digitalocean-2_4-ubuntu-20_04-set
+  ]
+  actions = [
+    "generic-add-node"
+  ]
+  provisionType = "digitalocean"
+}
+
+resource "scale-action" "apache-digitalocean-2_4-ubuntu-20_04-scale" {
+  code = "apache-digitalocean-2.4-ubuntu-20.04-scale"
+  scaleType = "action"
+  layout = instance-type-layout.apache-digitalocean-2_4-ubuntu-20_04-single
+  upAction = "generic-add-node"
+  downAction = "generic-remove-node"
+}
+
+//Apache 2.4  on Centos 7.3
+resource "workload-type" "apache-digitalocean-2_4-centos-7_3" {
+  code = "apache-digitalocean-2.4-centos-7.3"
+  shortName = "apache"
+  name = "Apache 2.4"
+  ports = [80, 443]
+  containerVersion = "2.4"
+  repositoryImage = ""
+  entryPoint = "/entrypoint.sh"
+  statTypeCode = "vm"
+  logTypeCode = "apache"
+  checkTypeCode = "webGetCheck"
+  mountPoint = "/data"
+  mountConfig = "/etc/httpd"
+  mountData = "/var/www/html"
+  mountLogs = "/var/log/httpd"
+  category = "apache"
+  cloneType = "apache"
+  priorityOrder = 0
+  serverType = "vm"
+  providerType = "digitalocean"
+  virtualImage = virtual-image.digitalocean-image-morpheus-centos-7_3
+  actions = [
+    "apache-remove-node"
+  ]
+  deploymentType = "default"
+  scripts = [
+    "apache-2.4-vm-entrypoint",
+    "apache-2.4-vm-centos-stop",
+    "apache-2.4-vm-centos-start"
+  ]
+  provisionScript = "morpheus.ansible.provision.apache-2_4-morph.0.1"
+  provisionType = "digitalocean"
+  backupType = "digitaloceanSnapshot"
+  containerPorts = [
+    "apache.80",
+    "apache.443"
+  ]
+}
+
+resource "workload-type-set" "apache-digitalocean-2_4-centos-7_3-set" {
+  code = "apache-digitalocean-2.4-centos-7.3-set"
+  category = "apache"
+  dynamicCount = true
+  workloadType = workload-type.apache-digitalocean-2_4-centos-7_3
+  priorityOrder = 0
+  containerCount = 1
+}
+
+resource "instance-type-layout" "apache-digitalocean-2_4-centos-7_3-single" {
+  code = "apache-digitalocean-2.4-centos-7.3-single"
+  name = "DigitalOcean Apache on CentOS 7.3"
+  sortOrder = 100
+  description = "This will provision a single process with no redundancy"
+  instanceType = "apache"
+  instanceVersion = "2.4"
+  serverCount = 1
+  portCount = 2
+  serverType = "vm"
+  hasAutoScale = true
+  enabled = true
+  creatable = true
+  containers = [
+    workload-type-set.apache-digitalocean-2_4-centos-7_3-set
+  ]
+  actions = [
+    "apache-add-node"
+  ]
+  provisionType = "digitalocean"
+}
+
+resource "scale-action" "apache-digitalocean-2_4-centos-7_3-scale" {
+  code = "apache-digitalocean-2.4-centos-7.3-scale"
+  scaleType = "action"
+  layout = instance-type-layout.apache-digitalocean-2_4-centos-7_3-single
+  upAction = "apache-add-node"
+  downAction = "apache-remove-node"
+}

@@ -1,0 +1,68 @@
+resource "workload-type" "rabbitmq-digitalocean-3_6-ubuntu-18_04" {
+  code = "rabbitmq-digitalocean-3.6-ubuntu-18.04"
+  shortName = "rabbitmq"
+  name = "RabbitMQ 3.6"
+  ports = [5672, 15672, 25672, 4369, 35197]
+  containerVersion = "3.6"
+  repositoryImage = ""
+  entryPoint = "/entrypoint.sh"
+  statTypeCode = "vm"
+  logTypeCode = "rabbitmq"
+  checkTypeCode = "rabbitCheck"
+  mountPoint = "/data"
+  mountConfig = "/etc/rabbitmq"
+  mountData = "/var/lib/rabbitmq/mnesia/"
+  mountLogs = "/var/log/rabbitmq"
+  category = "rabbitmq"
+  cloneType = "rabbitmq"
+  priorityOrder = 0
+  serverType = "vm"
+  providerType = "digitalocean"
+  deploymentType = "rabbitmq"
+  virtualImage = virtual-image.digitalocean-image-morpheus-ubuntu-20_04
+  actions = ["rabbitmq-remove-node"]
+  scripts = [
+    "rabbitmq-3.6-vm-entrypoint",
+    "rabbitmq-3.6-vm-stop",
+    "rabbitmq-3.6-vm-start",
+    "rabbitmq-3.x-vm-reset-rmq"
+  ]
+  containerPorts = [
+    "rabbitmq.5672",
+    "rabbitmq.15672",
+    "rabbitmq.25672",
+    "rabbitmq.4369",
+    "rabbitmq.35197",
+    "rabbitmq.5671"
+  ]
+  provisionScript = "morpheus.ansible.provision.rabbitmq-3_6"
+  provisionType = "digitalocean"
+  backupType = "digitaloceanSnapshot"
+}
+
+resource "workload-type-set" "rabbitmq-digitalocean-3_6-ubuntu-18_04-set" {
+  code = "rabbitmq-digitalocean-3.6-ubuntu-18.04-set"
+  category = "rabbitmq"
+  workloadType = workload-type.rabbitmq-digitalocean-3_6-ubuntu-18_04
+  priorityOrder = 0
+  containerCount = 1
+}
+
+resource "instance-type-layout" "rabbitmq-digitalocean-3_6-ubuntu-18_04-single" {
+  code = "rabbitmq-digitalocean-3.6-ubuntu-18.04-single"
+  name = "DigitalOcean RabbitMQ"
+  sortOrder = 10
+  description = "This will provision a single process with no redundancy"
+  instanceType = "rabbitmq"
+  instanceVersion = "3.6"
+  serverCount = 1
+  portCount = 5
+  serverType = "vm"
+  hasAutoScale = true
+  enabled = true
+  workloads = [
+    workload-type-set.rabbitmq-digitalocean-3_6-ubuntu-18_04-set
+  ]
+  actions = ["rabbitmq-add-node"]
+  provisionType = "digitalocean"
+}

@@ -1,0 +1,66 @@
+resource "workload-type" "ubuntu-digitalocean-22_04" {
+  code = "ubuntu-digitalocean-22.04"
+  shortName = "ubuntu"
+  name = "Ubuntu 22.04"
+  ports = [22]
+  containerVersion = "22.04"
+  repositoryImage = ""
+  entryPoint = "/entrypoint.sh"
+  statTypeCode = "vm"
+  logTypeCode = "ubuntu"
+  checkTypeCode = "containerCheck"
+  mountPoint = "/morpheus"
+  category = "ubuntu"
+  serverType = "vm"
+  providerType = "digitalocean"
+  virtualImage = virtual-image.digitalocean-image-morpheus-ubuntu-22_04
+  scripts = []
+  templates = []
+  provisionType = "digitalocean"
+  backupType = "digitaloceanSnapshot"
+  actions = [
+    "generic-remove-node"
+  ]
+  containerPorts = [
+    "ubuntu.22"
+  ]
+}
+
+resource "workload-type-set" "ubuntu-digitalocean-22_04-set" {
+  code = "ubuntu-digitalocean-22.04-set"
+  category = "ubuntu"
+  dynamicCount = true
+  workloadType = workload-type.ubuntu-digitalocean-22_04
+  priorityOrder = 0
+  containerCount = 1
+}
+
+resource "instance-type-layout" "ubuntu-digitalocean-22_04-single" {
+  code = "ubuntu-digitalocean-22.04-single"
+  name = "DigitalOcean VM"
+  sortOrder = 22
+  description = "This will provision a single vm"
+  instanceType = "ubuntu"
+  instanceVersion = "22.04"
+  serverCount = 1
+  portCount = 1
+  serverType = "vm"
+  supportsConvertToManaged = true
+  enabled = true
+  creatable = true
+  workloads = [
+    workload-type-set.ubuntu-digitalocean-22_04-set
+  ]
+  actions = [
+    "ubuntu-add-node"
+  ]
+  provisionType = "digitalocean"
+}
+
+resource "scale-action" "ubuntu-digitalocean-22_04-single" {
+  code = "ubuntu-digitalocean-22.04-single"
+  scaleType = "action"
+  layout = instance-type-layout.ubuntu-digitalocean-22_04-single
+  upAction = "generic-add-node"
+  downAction = "generic-remove-node"
+}

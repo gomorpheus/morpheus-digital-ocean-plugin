@@ -1,0 +1,65 @@
+resource "workload-type" "debian-digitalocean-9_13" {
+  code = "debian-digitalocean-9.13"
+  shortName = "debian"
+  name = "Debian 9.13"
+  ports = [22]
+  containerVersion = "9.13"
+  repositoryImage = ""
+  entryPoint = "/entrypoint.sh"
+  statTypeCode = "vm"
+  logTypeCode = "debian"
+  checkTypeCode = "containerCheck"
+  mountPoint = "/morpheus"
+  category = "debian"
+  serverType = "vm"
+  providerType = "digitalocean"
+  virtualImage = virtual-image.digitalocean-image-morpheus-debian-9
+  scripts = []
+  provisionType = "digitalocean"
+  backupType = "digitaloceanSnapshot"
+  containerPorts = [
+    "debian.22"
+  ]
+  actions = [
+    "generic-remove-node"
+  ]
+}
+
+resource "workload-type-set" "debian-digitalocean-9_13-set" {
+  code = "debian-digitalocean-9.13-set"
+  category = "debian"
+  dynamicCount = true
+  workloadType = workload-type.debian-digitalocean-9_13
+  priorityOrder = 0
+  containerCount = 1
+}
+
+resource "instance-type-layout" "debian-digitalocean-9_13-single" {
+  code = "debian-digitalocean-9.13-single"
+  name = "DigitalOcean VM"
+  sortOrder = 9
+  description = "This will provision a single vm"
+  instanceType = "debian"
+  instanceVersion = "9.13"
+  serverCount = 1
+  portCount = 1
+  serverType = "vm"
+  supportsConvertToManaged = true
+  enabled = true
+  creatable = false
+  workloads = [
+    workload-type-set.debian-digitalocean-9_13-set
+  ]
+  actions = [
+    "generic-add-node"
+  ]
+  provisionType = "digitalocean"
+}
+
+resource "scale-action" "debian-digitalocean-9_13-single" {
+  code = "debian-digitalocean-9.13-single"
+  scaleType = "action"
+  layout = instance-type-layout.debian-digitalocean-9_13-single
+  upAction = "generic-add-node"
+  downAction = "generic-remove-node"
+}

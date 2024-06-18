@@ -1,0 +1,146 @@
+# master
+resource "workload-type" "kubernetes-1_27-ha-master-ubuntu-20_04-digitalocean-amd64" {
+  code             = "kubernetes-1.27-ha-master-ubuntu-20.04-digitalocean-amd64"
+  shortName        = "kubernetes-ubuntu"
+  name             = "Kubernetes 1.27 HA Master Cluster on Ubuntu 20.04"
+  containerVersion = "1.27.7"
+  repositoryImage  = ""
+  imageCode        = "morpheus kubernetes 1.27 on ubuntu 20.04"
+  entryPoint       = ""
+  mountLogs        = "/var/log"
+  statTypeCode     = "server"
+  logTypeCode      = "ubuntu"
+  showServerLogs   = true
+  category         = "kubernetes"
+  cloneType        = "ubuntu"
+  priorityOrder    = 0
+  serverType       = "vm"
+  providerType     = "digitalocean"
+  checkTypeCode    = "vmCheck"
+  virtualImage     = virtual-image.digitalocean-image-morpheus-ubuntu-20_04
+  containerPorts   = ["ubuntu.22"]
+  provisionType    = "digitalocean"
+  scripts          = [
+    "setup-disks-v1", "kubernetes-1-27-ubuntu-install-v1", "kubernetes-1-27-kubeadm-cluster-master-init-v1",
+    "kubernetes-1-27-kubeadm-cluster-master-setup-v1", "kube-kubeadm-cluster-shared-key", "k8-config-save",
+    "k8-cypher"
+  ]
+  templates = []
+}
+
+# add master vm
+resource "workload-type" "kubernetes-1_27-ha-add-master-ubuntu-20_04-digitalocean-amd64" {
+  code             = "kubernetes-1.27-ha-add-master-ubuntu-20.04-digitalocean-amd64"
+  shortName        = "kubernetes-ubuntu"
+  name             = "Kubernetes 1.27 HA Add Master Cluster on Ubuntu 20.04"
+  containerVersion = "1.27.7"
+  repositoryImage  = ""
+  imageCode        = "morpheus kubernetes 1.27 on ubuntu 20.04"
+  entryPoint       = ""
+  mountLogs        = "/var/log"
+  statTypeCode     = "server"
+  logTypeCode      = "ubuntu"
+  showServerLogs   = true
+  category         = "kubernetes"
+  cloneType        = "ubuntu"
+  priorityOrder    = 0
+  serverType       = "vm"
+  providerType     = "digitalocean"
+  checkTypeCode    = "vmCheck"
+  virtualImage     = virtual-image.digitalocean-image-morpheus-ubuntu-20_04
+  containerPorts   = ["ubuntu.22"]
+  provisionType    = "digitalocean"
+  scripts          = [
+    "setup-disks-v1", "kube-kubeadm-cluster-shared-key", "kubernetes-1-27-ubuntu-install-v2", "k8-config-fetch",
+    "kubernetes-1-27-kubeadm-cluster-add-master-setup-v1", "kubernetes-1-27-kubeadm-cluster-add-master-init-v1"
+  ]
+  templates = ["k8-cypher"]
+}
+
+# master set
+resource "compute-type-set" "kubernetes-1_27-ha-master-ubuntu-20_04-digitalocean-amd64-set" {
+  code             = "kubernetes-1.27-ha-master-ubuntu-20.04-digitalocean-amd64-set"
+  name             = "kubernetes master"
+  workloadType    = workload-type.kubernetes-1_27-ha-master-ubuntu-20_04-digitalocean-amd64
+  computeServerType= "digitaloceanKubeMaster"
+  category         = "ubuntu"
+  priorityOrder    = 0
+  dynamicCount     = false
+  forceNameIndex   = true
+  nodeCount        = 1
+  nameSuffix       = "-master"
+  nodeType         = "master"
+  installContainerRuntime = false
+  installStorageRuntime = false
+}
+
+# add master set
+resource "compute-type-set" "kubernetes-1_27-ha-add-master-ubuntu-20_04-digitalocean-amd64-set" {
+  code             = "kubernetes-1.27-ha-add-master-ubuntu-20.04-digitalocean-amd64-set"
+  name             = "kubernetes master"
+  workloadType    = workload-type.kubernetes-1_27-ha-add-master-ubuntu-20_04-digitalocean-amd64
+  computeServerType= "digitaloceanKubeMaster"
+  category         = "ubuntu"
+  priorityOrder    = 1
+  dynamicCount     = false
+  forceNameIndex   = true
+  nodeCount        = 1
+  nameSuffix       = "-master"
+  nodeType         = "master"
+  installContainerRuntime = false
+  installStorageRuntime = false
+}
+
+# add final setup
+resource "compute-type-set" "kubernetes-1_27-ha-final-master-ubuntu-20_04-digitalocean-amd64-set" {
+  code             = "kubernetes-1.27-ha-final-master-ubuntu-20.04-digitalocean-amd64-set"
+  name             = "kubernetes master"
+  workloadType    = workload-type.kubernetes-1_27-ha-add-master-ubuntu-20_04-digitalocean-amd64
+  computeServerType= "digitaloceanKubeMaster"
+  category         = "ubuntu"
+  priorityOrder    = 2
+  dynamicCount     = false
+  forceNameIndex   = true
+  nodeCount        = 1
+  nameSuffix       = "-master"
+  nodeType         = "master"
+  installContainerRuntime = false
+  installStorageRuntime = false
+}
+
+# layout
+resource "compute-type-layout" "kubernetes-1_27-ubuntu-20_04-digitalocean-amd64" {
+  code = "kubernetes-1.27-ubuntu-20.04-digitalocean-amd64"
+  enabled = true
+  name = "MKS Kubernetes 1.27 HA Cluster on Ubuntu 20.04"
+  sortOrder = 120
+  computeVersion = "20.04"
+  clusterVersion = "1.27.x"
+  description = "provision a high availability kubernetes 1.27 cluster on ubuntu 20.04"
+  type = "digitaloceanKubeMaster"
+  serverCount = 6
+  memoryRequirement = 1073741824
+  hasAutoScale = true
+  containerRuntime = "containerd"
+  networkRuntime = "calico"
+  computeServers = [
+    compute-type-set.kubernetes-1_27-ha-master-ubuntu-20_04-digitalocean-amd64-set,
+    compute-type-set.kubernetes-1_27-ha-add-master-ubuntu-20_04-digitalocean-amd64-set,
+    compute-type-set.kubernetes-1_27-ha-final-master-ubuntu-20_04-digitalocean-amd64-set,
+    compute-type-set.kubernetes-1_27-ubuntu-20_04-worker-digitalocean-amd64-set
+  ]
+  groupType = "kubernetes-cluster"
+  provisionType =  "digitalocean"
+  optionTypes = [
+    "kubernetes.master.podCidr",
+    "kubernetes.master.serviceCidr"
+  ]
+  specTemplates = []
+  packages = [
+    "kubernetes-calico-3-26-0-package",
+    "kubernetes-rook-1-13-package",
+    "kubernetes-fluentbit-1-8-9-1-modified-package",
+    "kubernetes-prometheus-0-9-modified-package",
+    "kubernetes-nginx-ingress-operator-1-9-4-package"
+  ]
+}

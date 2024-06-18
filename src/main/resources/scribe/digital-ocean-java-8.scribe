@@ -1,0 +1,68 @@
+resource "workload-type" "java-digitalocean-8-ubuntu-20_04" {
+  code = "java-digitalocean-8-ubuntu-20.04"
+  shortName = "java"
+  name = "Java 8"
+  ports = []
+  containerVersion = "8"
+  repositoryImage = ""
+  entryPoint = ""
+  statTypeCode = "vm"
+  logTypeCode = "java"
+  checkTypeCode = null
+  mountPoint = "/var/java_home"
+  mountConfig = "/morpheus/config"
+  mountData = "/morpheus/data"
+  mountLogs = "/morpheus/logs"
+  category = "java"
+  serverType = "vm"
+  providerType = "digitalocean"
+  virtualImage = virtual-image.digitalocean-image-morpheus-ubuntu-20_04
+  actions = ["grails-remove-node"]
+  deploymentType = "java"
+  scripts = [
+    "java-deploy",
+    "java-vm-entrypoint-systemd",
+    "java-vm-stop-systemd",
+    "java-vm-start-systemd"
+  ]
+  containerPorts = ["java.8080"]
+  provisionScript = "morpheus.ansible.provision.java-8-1"
+  provisionType = "digitalocean"
+  backupType = "digitaloceanSnapshot"
+}
+
+resource "workload-type-set" "java-digitalocean-8-ubuntu-20_04-set" {
+  code = "java-digitalocean-8-ubuntu-20.04-set"
+  category = "java"
+  workloadType = workload-type.java-digitalocean-8-ubuntu-20_04
+  priorityOrder = 0
+  containerCount = 1
+}
+
+resource "instance-type-layout" "java-digitalocean-8-ubuntu-20_04-single" {
+  code = "java-digitalocean-8-ubuntu-20.04-single"
+  name = "DigitalOcean Java"
+  sortOrder = 10
+  description = "This will provision a single process with no redundancy"
+  instanceType = "java"
+  instanceVersion = "8"
+  serverCount = 1
+  portCount = 1
+  serverType = "vm"
+  enabled = true
+  creatable = true
+  hasAutoScale = true
+  workloads = [
+    workload-type-set.java-digitalocean-8-ubuntu-20_04-set
+  ]
+  actions = ["java-add-node"]
+  provisionType = "digitalocean"
+}
+
+resource "scale-action" "java-digitalocean-8-ubuntu-20_04-single-scale" {
+  code = "java-digitalocean-8-ubuntu-20.04-single-scale"
+  scaleType = "action"
+  layout = instance-type-layout.java-digitalocean-8-ubuntu-20_04-single
+  upAction = "java-add-node"
+  downAction = "java-remove-node"
+}

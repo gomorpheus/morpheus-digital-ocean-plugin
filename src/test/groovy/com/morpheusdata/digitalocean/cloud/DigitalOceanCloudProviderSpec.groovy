@@ -7,16 +7,7 @@ import com.morpheusdata.core.Plugin
 import com.morpheusdata.digitalocean.DigitalOceanApiService
 import com.morpheusdata.digitalocean.DigitalOceanPlugin
 import com.morpheusdata.model.Cloud
-import com.morpheusdata.model.ServicePlan
-import com.morpheusdata.model.VirtualImage
-import com.morpheusdata.model.projection.ServicePlanIdentityProjection
-import com.morpheusdata.model.projection.VirtualImageIdentityProjection
 import com.morpheusdata.request.ValidateCloudRequest
-import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.core.ObservableEmitter
-import io.reactivex.rxjava3.core.ObservableOnSubscribe
-import io.reactivex.rxjava3.core.Single
-import io.reactivex.rxjava3.core.annotations.NonNull
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Subject

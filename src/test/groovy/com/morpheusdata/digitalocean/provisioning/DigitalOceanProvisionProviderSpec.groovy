@@ -1,7 +1,6 @@
 package com.morpheusdata.digitalocean.provisioning
 
 import com.morpheusdata.digitalocean.DigitalOceanPlugin
-import com.morpheusdata.digitalocean.provisioning.DigitalOceanProvisionProvider
 import com.morpheusdata.core.cloud.MorpheusCloudService
 import com.morpheusdata.core.MorpheusComputeServerService
 import com.morpheusdata.core.MorpheusContext
@@ -16,16 +15,11 @@ import com.morpheusdata.model.KeyPair
 import com.morpheusdata.model.ServicePlan
 import com.morpheusdata.model.provisioning.UsersConfiguration
 import com.morpheusdata.model.Workload
-import com.morpheusdata.model.projection.VirtualImageIdentityProjection
 import com.morpheusdata.model.provisioning.WorkloadRequest
 import com.morpheusdata.request.ResizeRequest
 import com.morpheusdata.response.ServiceResponse
 import groovy.json.JsonSlurper
-import io.reactivex.rxjava3.core.Observable
-import io.reactivex.rxjava3.core.ObservableEmitter
-import io.reactivex.rxjava3.core.ObservableOnSubscribe
 import io.reactivex.rxjava3.core.Single
-import io.reactivex.rxjava3.core.annotations.NonNull
 import org.apache.http.client.methods.HttpPost
 import spock.lang.Shared
 import spock.lang.Specification

@@ -3,6 +3,7 @@ package com.morpheusdata.digitalocean.cloud.sync
 import com.morpheusdata.model.BackupProvider
 import com.morpheusdata.model.PlatformType
 import com.morpheusdata.model.VirtualImageLocation
+import com.morpheusdata.model.VirtualImageType
 import com.morpheusdata.response.ServiceResponse
 import com.morpheusdata.digitalocean.DigitalOceanPlugin
 import com.morpheusdata.digitalocean.DigitalOceanApiService
@@ -99,6 +100,7 @@ class ImagesSync {
 					code       : "${imageCodeBase}${userImages ? ".${cloud.code}.${it.id}" : ".${it.id}"}",
 					category   : "${imageCodeBase}${userImages ? ".${cloud.code}" : ""}",
 					imageType  : ImageType.qcow2,
+					virtualImageType: new VirtualImageType(code: "qcow2"),
 					platform   : it.distribution == "Unknown" ? PlatformType.unknown : PlatformType.linux,
 					minDisk    : it.min_disk_size,
 					locations  : it.regions,
@@ -165,13 +167,18 @@ class ImagesSync {
 				doSave = true
 			}
 
+			if(!existingItem.virtualImageType) {
+				existingItem.virtualImageType = new VirtualImageType(code: "qcow2")
+				doSave = true
+			}
+
 			if(doSave) {
 				imagesToUpdate << existingItem
 			}
 		}
 
 		log.debug("Have ${imagesToUpdate?.size()} to update")
-		morpheusContext.virtualImage.save(imagesToUpdate, cloud).blockingGet()
+		morpheusContext.async.virtualImage.save(imagesToUpdate, cloud).blockingGet()
 	}
 
 	ServiceResponse clean(Map opts=[:]) {

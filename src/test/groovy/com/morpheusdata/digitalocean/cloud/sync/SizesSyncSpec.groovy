@@ -14,7 +14,7 @@ import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.core.ObservableEmitter
 import io.reactivex.rxjava3.core.ObservableOnSubscribe
 import io.reactivex.rxjava3.core.Single
-import io.reactivex.rxjava3.core.annotations.NonNull
+import io.reactivex.rxjava3.annotations.NonNull
 import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification

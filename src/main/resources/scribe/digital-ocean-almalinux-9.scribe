@@ -1,0 +1,66 @@
+resource "workload-type" "almalinux-digitalocean-9" {
+  code = "almalinux-digitalocean-9"
+  shortName = "almalinux"
+  name = "AlmaLinux 9"
+  ports = [22]
+  containerVersion = "9"
+  repositoryImage = ""
+  entryPoint = "/entrypoint.sh"
+  statTypeCode = "vm"
+  logTypeCode = "vm"
+  checkTypeCode = "containerCheck"
+  mountPoint = "/morpheus"
+  category = "almalinux"
+  serverType = "vm"
+  providerType = "digitalocean"
+  virtualImage = virtual-image.digitalocean-image-morpheus-almalinux-9
+  scripts = []
+  templates = []
+  provisionType = "digitalocean"
+  backupType = "digitaloceanSnapshot"
+  actions = [
+    "generic-remove-node"
+  ]
+  containerPorts = [
+    "almalinux.22"
+  ]
+}
+
+resource "workload-type-set" "almalinux-digitalocean-9-set" {
+  code = "almalinux-digitalocean-9-set"
+  category = "almalinux"
+  dynamicCount = true
+  workloadType = workload-type.almalinux-digitalocean-9
+  priorityOrder = 0
+  containerCount = 1
+}
+
+resource "instance-type-layout" "almalinux-digitalocean-9-single" {
+  code = "almalinux-digitalocean-9-single"
+  name = "DigitalOcean VM"
+  sortOrder = 99
+  description = "This will provision a single vm"
+  instanceType = "almalinux"
+  instanceVersion = "9"
+  serverCount = 1
+  portCount = 1
+  serverType = "vm"
+  supportsConvertToManaged = true
+  enabled = true
+  creatable = true
+  workloads = [
+    workload-type-set.almalinux-digitalocean-9-set
+  ]
+  actions = [
+    "generic-add-node"
+  ]
+  provisionType = "digitalocean"
+}
+
+resource "scale-action" "almalinux-digitalocean-9-single" {
+  code = "almalinux-digitalocean-9-single"
+  scaleType = "action"
+  layout = instance-type-layout.almalinux-digitalocean-9-single
+  upAction = "generic-add-node"
+  downAction = "generic-remove-node"
+}

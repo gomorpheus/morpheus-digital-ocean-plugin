@@ -11,8 +11,10 @@ import com.morpheusdata.core.AbstractProvisionProvider
 import com.morpheusdata.core.MorpheusContext
 import com.morpheusdata.core.Plugin
 import com.morpheusdata.model.BackupResult
+import com.morpheusdata.model.CloudPool
 import com.morpheusdata.model.ComputeServer
 import com.morpheusdata.model.ComputeServerInterfaceType
+import com.morpheusdata.model.ComputeServerType
 import com.morpheusdata.model.ComputeTypeLayout
 import com.morpheusdata.model.ComputeTypeSet
 import com.morpheusdata.model.HostType
@@ -24,6 +26,7 @@ import com.morpheusdata.model.OsType
 import com.morpheusdata.model.ServicePlan
 import com.morpheusdata.model.StorageVolume
 import com.morpheusdata.model.VirtualImage
+import com.morpheusdata.model.VirtualImageType
 import com.morpheusdata.model.Workload
 import com.morpheusdata.model.Cloud
 import com.morpheusdata.model.KeyPair
@@ -41,8 +44,6 @@ import groovy.util.logging.Slf4j
 class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements ComputeProvisionProvider, VmProvisionProvider, WorkloadProvisionProvider.ResizeFacet, HostProvisionProvider.ResizeFacet {
 	DigitalOceanPlugin plugin
 	MorpheusContext morpheusContext
-	private static final String DIGITAL_OCEAN_ENDPOINT = 'https://api.digitalocean.com'
-	private static final String UBUNTU_VIRTUAL_IMAGE_CODE = 'digitalocean.image.morpheus.ubuntu.18.04'
 
 	DigitalOceanProvisionProvider(DigitalOceanPlugin plugin, MorpheusContext morpheusContext) {
 		this.plugin = plugin
@@ -76,12 +77,31 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 	}
 
 	@Override
+	// images can be uploaded in raw, qcow2, vhdx, vdi, or vmdk formats and will be converted to qcow2
+	Collection<VirtualImageType> getVirtualImageTypes() {
+		def virtualImageTypes = [
+			new VirtualImageType(
+				code:"digitalocean", name:"Digital Ocean", nameCode:"gomorpheus.virtualImage.types.digitalOcean",
+				creatable: true, active:true, visible: true
+			),
+			new VirtualImageType(code: 'raw', name: 'RAW'),
+			new VirtualImageType(code: 'qcow2', name: 'QCOW2'),
+			new VirtualImageType(code: 'vhdx', name: 'VHDX'),
+			new VirtualImageType(code: 'vdi', name: 'VDI'),
+			new VirtualImageType(code: 'vmdk', name: 'VMDK')
+		]
+
+		return virtualImageTypes
+	}
+
+	@Override
 	Collection<VirtualImage> getVirtualImages() {
 		VirtualImage virtualImage = new VirtualImage(
-				code: UBUNTU_VIRTUAL_IMAGE_CODE,
+				code: 'digitalocean.image.morpheus.ubuntu.18.04',
 				category:'digitalocean.image.morpheus',
 				name:'Ubuntu 18.04 LTS (Digital Ocean Marketplace)',
 				imageType: ImageType.qcow2,
+				virtualImageType: new VirtualImageType(code: 'qcow2'),
 				systemImage:true,
 				isCloudInit:true,
 				externalId:'ubuntu-18-04-x64',
@@ -325,6 +345,15 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 		return true
 	}
 
+	/**
+	 * Specifies which deployment service should be used with this provider. In this case we are using the vm service
+	 * @return the name of the service
+	 */
+	@Override
+	String getDeployTargetService() {
+		return "vmDeployTargetService"
+	}
+
 	@Override
 	String getNodeFormat() {
 		return "vm"
@@ -343,6 +372,24 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 	@Override
 	Boolean createDefaultInstanceType() {
 		return false
+	}
+
+	/**
+	 * Determines if this provision type has resources pools that can be selected or not.
+	 * @return Boolean representation of whether or not this provision type has resource pools
+	 */
+	@Override
+	Boolean hasComputeZonePools() {
+		return true
+	}
+
+	/**
+	 * Indicates if a ComputeZonePool is required during provisioning
+	 * @return Boolean
+	 */
+	@Override
+	Boolean computeZonePoolRequired() {
+		return true
 	}
 
 	@Override
@@ -373,6 +420,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 		def containerConfig = new groovy.json.JsonSlurper().parseText(workload.configs ?: '{}')
 		ComputeServer server = workload.server
 		Cloud cloud = server?.cloud
+		CloudPool cloudPool = server?.resourcePool
 
 		String apiKey = plugin.getAuthConfig(cloud).doApiKey
 		if (!apiKey) {
@@ -436,7 +484,8 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 			'image'             : imageId,
 			'backups'           : "${opts.doBackups == true}",
 			'ipv6'              : "${opts.ipv6 == true}",
-			'user_data'         : userData
+			'user_data'         : userData,
+			'vpc_uuid'			: cloudPool.externalId
 		]
 
 		// Add ssh keys provided by morpheus core services, e.g. Account or User ssh keys
@@ -466,6 +515,13 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 			server.osDevice = '/dev/vda'
 			server.dataDevice = '/dev/vda'
 			server.lvmEnabled = false
+
+			server.uniqueId = externalId
+			server.category = "digitalocean.vm.${cloud.id}"
+			if (!server.computeServerType) {
+				server.computeServerType = getAllComputeServerTypes(cloud.id)['digitalOceanVm']
+			}
+
 			server = saveAndGet(server)
 
 			return new ServiceResponse<ProvisionResponse>(success: true, data: provisionResponse)
@@ -549,6 +605,9 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 	@Override
 	ServiceResponse<ProvisionResponse> runHost(ComputeServer server, HostRequest hostRequest, Map opts) {
 		DigitalOceanApiService apiService = new DigitalOceanApiService()
+		CloudPool cloudPool = server?.resourcePool
+		String cloudPoolExternalId = cloudPool?.externalId ?: server.cloud.configMap.vpc
+		log.debug("cloudPoolExternalId: ${cloudPoolExternalId}")
 
 		log.debug("runHost: ${server} ${hostRequest} ${opts}")
 
@@ -556,7 +615,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 		if (!apiKey) {
 			return new ServiceResponse(success: false, msg: 'No API Key provided')
 		}
-		
+
 		// sshKeys needed?
 		// opts.sshKeys = getKeyList(server.cloud, config.publicKeyId)
 
@@ -572,7 +631,8 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 				'backups'           : "${opts.doBackups}",
 				'ipv6'              : false,
 				'user_data'         : hostRequest.cloudConfigUser,
-				'private_networking': false
+				'private_networking': false,
+				'vpc_uuid'			: cloudPoolExternalId
 		]
 
 		def response = apiService.createDroplet(apiKey, dropletConfig)
@@ -828,13 +888,8 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 		def privateIp = privateNetwork?.ip_address ?: publicIp
 		provisionResponse.publicIp = publicIp
 		provisionResponse.privateIp = privateIp
+		provisionResponse.noAgent = opts.noAgent ?: false
 
-		if(opts?.containsKey('installAgent')) {
-			provisionResponse.installAgent = opts.installAgent
-		}
-		if(opts?.containsKey('noAgent')) {
-			provisionResponse.noAgent = opts.noAgent
-		}
 		if(opts?.containsKey('createUsers')) {
 			provisionResponse.createUsers = opts.createUsers
 		}
@@ -866,5 +921,9 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 		}
 
 		return rtn
+	}
+
+	private Map<String, ComputeServerType> getAllComputeServerTypes() {
+		def computeServerTypes = morpheusContext.async.cloud.getComputeServerTypes(cloud.id).blockingGet().collectEntries { [it.code, it] }
 	}
 }

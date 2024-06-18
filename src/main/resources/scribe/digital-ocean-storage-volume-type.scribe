@@ -1,0 +1,17 @@
+resource "storage-volume-type" "digital-ocean-volume" {
+  code = "digitalOceanVolume"
+  displayName = "DO Disk"
+  name = "Volume"
+  description = "DigitalOcean Volume"
+  volumeType = "disk"
+  enabled = true
+  displayOrder = 1
+  customLabel = true
+  customSize = false
+  defaultType = true
+  autoDelete = true
+  minStorage = 1024 * 1024 * 1024
+  hasDatastore = false
+  allowSearch = true
+  volumeCategory = "disk"
+}
