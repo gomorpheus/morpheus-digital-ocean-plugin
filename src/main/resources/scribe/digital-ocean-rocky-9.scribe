@@ -13,7 +13,7 @@ resource "workload-type" "rocky-digitalocean-9" {
   category = "rocky"
   serverType = "vm"
   providerType = "digitalocean"
-  virtualImage = virtual-image.digitalocean-image-morpheus-ubuntu-20_04
+  virtualImage = virtual-image.digitalocean-image-morpheus-rocky-9
   scripts = []
   templates = []
   provisionType = "digitalocean"
