@@ -384,7 +384,7 @@ class DigitalOceanSnapshotProvider extends AbstractMorpheusBackupTypeProvider {
 	@Override
 	ServiceResponse refreshBackupRestoreResult(BackupRestore backupRestore, BackupResult backupResult) {
 		DigitalOceanApiService apiService = new DigitalOceanApiService()
-		log.debug("syncBackupRestoreResult restore: {}", restore)
+		log.debug("syncBackupRestoreResult restore: {}", backupRestore)
 		ServiceResponse<BackupRestoreResponse> rtn = ServiceResponse.prepare(new BackupRestoreResponse(backupRestore))
 		def actionId = backupRestore.externalStatusRef
 		if(actionId) {
