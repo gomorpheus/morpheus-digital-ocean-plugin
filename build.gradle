@@ -104,6 +104,11 @@ shadowJar {
 	// archiveFileName = "${project.name}-${version}.jar"
 }
 
+task copyRuntimeLibs(type: Copy) {
+	into "lib"
+	from project.configurations.runtimeClasspath - project.configurations.provided
+}
+
 tasks.assemble.dependsOn tasks.shadowJar
 
 tasks.register('moveToPlugin') {
