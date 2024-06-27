@@ -53,7 +53,7 @@ class DigitalOceanOptionSourceProvider implements OptionSourceProvider {
 		def zoneId = args?.size() > 0 ? args.getAt(0).zoneId?.toLong() : null
 		def accountId = args?.size() > 0 ? args.getAt(0).accountId?.toLong() : null
 		List options = []
-		morpheus.async.virtualImage.listIdentityProjectionsByCategory(accountId, ["digitalocean.image.os"]).blockingSubscribe{ options << [name: it.name, value: it.id] }
+		morpheus.async.virtualImage.listIdentityProjectionsByCategory(accountId, (String[])["digitalocean.image.os"]).blockingSubscribe{ options << [name: it.name, value: it.id] }
 		if(zoneId) {
 			morpheus.async.virtualImage.listSyncProjections(zoneId).blockingSubscribe{ options << [name: it.name, value: it.id] }
 		}
