@@ -1,6 +1,7 @@
 package com.morpheusdata.digitalocean
 
 import com.morpheusdata.core.data.DataQuery
+import com.morpheusdata.core.data.DatasetQuery
 import com.morpheusdata.digitalocean.DigitalOceanPlugin
 import com.morpheusdata.digitalocean.DigitalOceanApiService
 import com.morpheusdata.core.MorpheusContext
@@ -52,9 +53,9 @@ class DigitalOceanOptionSourceProvider implements OptionSourceProvider {
 		def zoneId = args?.size() > 0 ? args.getAt(0).zoneId?.toLong() : null
 		def accountId = args?.size() > 0 ? args.getAt(0).accountId?.toLong() : null
 		List options = []
-		morpheus.virtualImage.listSyncProjectionsByCategory(accountId, "digitalocean.image.os").blockingSubscribe{options << [name: it.name, value: it.id]}
+		morpheus.async.virtualImage.listIdentityProjectionsByCategory(accountId, ["digitalocean.image.os"]).blockingSubscribe{ options << [name: it.name, value: it.id] }
 		if(zoneId) {
-			morpheus.virtualImage.listSyncProjections(zoneId).blockingSubscribe{options << [name: it.name, value: it.id]}
+			morpheus.async.virtualImage.listSyncProjections(zoneId).blockingSubscribe{ options << [name: it.name, value: it.id] }
 		}
 		return options.unique().sort { it.name }
 	}
