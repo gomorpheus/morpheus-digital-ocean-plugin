@@ -43,6 +43,7 @@ resource "instance-type-layout" "centos-digitalocean-9-stream-single" {
   serverCount = 1
   portCount = 1
   serverType = "vm"
+  hasAutoScale = true
   supportsConvertToManaged = true
   enabled = true
   creatable = true

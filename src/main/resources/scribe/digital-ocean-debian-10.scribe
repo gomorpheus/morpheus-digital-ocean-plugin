@@ -43,6 +43,7 @@ resource "instance-type-layout" "debian-digitalocean-10_10-single" {
   serverCount = 1
   portCount = 1
   serverType = "vm"
+  hasAutoScale = true
   supportsConvertToManaged = true
   enabled =true
   creatable = true

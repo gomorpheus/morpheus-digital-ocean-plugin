@@ -45,6 +45,7 @@ resource "instance-type-layout" "ubuntu-digitalocean-24_04-single" {
   serverCount = 1
   portCount = 1
   serverType = "vm"
+  hasAutoScale = true
   supportsConvertToManaged = true
   enabled = true
   creatable = true
