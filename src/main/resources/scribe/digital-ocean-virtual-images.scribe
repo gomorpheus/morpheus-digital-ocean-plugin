@@ -150,6 +150,22 @@ resource "virtual-image" "digitalocean-image-morpheus-debian-11" {
   osType             = "debian.11.64"
 }
 
+resource "virtual-image" "digitalocean-image-morpheus-debian-12" {
+  code               = "digitalocean.image.morpheus.debian.12"
+  category           = "digitalocean.image.morpheus"
+  sshUsername        = "root"
+  sshPassword        = null
+  name               = "Debian 12 (Digital Ocean Marketplace)"
+  imageType          = "qcow2"
+  virtualImageType   = "qcow2"
+  systemImage        = true
+  installAgent       = true
+  computeServerImage = true
+  isCloudInit        = true
+  externalId         = "debian-12-x64"
+  osType             = "debian.12.64"
+}
+
 resource "virtual-image" "digitalocean-image-morpheus-centos-7_3" {
   code               = "digitalocean.image.morpheus.centos.7.3"
   category           = "digitalocean.image.morpheus"
