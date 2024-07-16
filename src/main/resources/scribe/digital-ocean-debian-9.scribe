@@ -46,7 +46,7 @@ resource "instance-type-layout" "debian-digitalocean-9_13-single" {
   serverType = "vm"
   hasAutoScale = true
   supportsConvertToManaged = true
-  enabled = true
+  enabled = false
   creatable = false
   workloads = [
     workload-type-set.debian-digitalocean-9_13-set
