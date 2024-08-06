@@ -43,9 +43,10 @@ resource "instance-type-layout" "centos-digitalocean-8-stream-single" {
   serverCount = 1
   portCount = 1
   serverType = "vm"
+  hasAutoScale = true
   supportsConvertToManaged = true
-  enabled = true
-  creatable = true
+  enabled = false
+  creatable = false
   containers = [
     workload-type-set.centos-digitalocean-8-stream-set
   ]

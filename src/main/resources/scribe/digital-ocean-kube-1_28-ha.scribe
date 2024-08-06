@@ -115,7 +115,7 @@ resource "compute-type-layout" "kubernetes-1_28-ubuntu-22_04-digitalocean-amd64"
   code = "kubernetes-1.28-ubuntu-22.04-digitalocean-amd64"
   enabled = true
   name = "MKS Kubernetes 1.28 HA Cluster on Ubuntu 22.04"
-  sortOrder = 105
+  sortOrder = 120
   computeVersion = "22.04"
   clusterVersion = "1.28.x"
   description = "provision a high availability kubernetes 1.28 cluster on ubuntu 22.04"
@@ -126,10 +126,10 @@ resource "compute-type-layout" "kubernetes-1_28-ubuntu-22_04-digitalocean-amd64"
   containerRuntime = "containerd"
   networkRuntime = "calico"
   computeServers = [
-    compute-type-set.kubernetes-1_28-ha-master-ubuntu-22_04-digitalocean-amd64-set,
-    compute-type-set.kubernetes-1_28-ha-add-master-ubuntu-22_04-digitalocean-amd64-set,
-    compute-type-set.kubernetes-1_28-ha-final-master-ubuntu-22_04-digitalocean-amd64-set,
-    compute-type-set.kubernetes-1_28-ubuntu-22_04-worker-digitalocean-amd64-set
+    compute-type-set.kubernetes-ha-master-ubuntu-22_04-digitalocean-amd64-set,
+    compute-type-set.kubernetes-ha-add-master-ubuntu-22_04-digitalocean-amd64-set,
+    compute-type-set.kubernetes-ha-final-master-ubuntu-22_04-digitalocean-amd64-set,
+    compute-type-set.kubernetes-ubuntu-22_04-worker-digitalocean-amd64-set
   ]
   groupType = "kubernetes-cluster"
   provisionType =  "digitalocean"
@@ -141,8 +141,8 @@ resource "compute-type-layout" "kubernetes-1_28-ubuntu-22_04-digitalocean-amd64"
   packages = [
     "kubernetes-calico-3-26-0-package",
     "kubernetes-rook-1-13-package",
-    "kubernetes-fluentbit-1-8-9-1-modified-package",
-    "kubernetes-prometheus-0-9-modified-package",
-    "kubernetes-nginx-ingress-operator-1-9-4-package"
+    "kubernetes-fluentbit-3-0-7-package",
+    "kubernetes-prometheus-0-12-package",
+    "kubernetes-nginx-ingress-operator-1-10-1-package"
   ]
 }

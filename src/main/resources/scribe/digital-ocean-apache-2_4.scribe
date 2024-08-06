@@ -137,8 +137,8 @@ resource "instance-type-layout" "apache-digitalocean-2_4-centos-7_3-single" {
   portCount = 2
   serverType = "vm"
   hasAutoScale = true
-  enabled = true
-  creatable = true
+  enabled = false
+  creatable = false
   containers = [
     workload-type-set.apache-digitalocean-2_4-centos-7_3-set
   ]
