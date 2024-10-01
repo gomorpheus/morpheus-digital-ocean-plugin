@@ -606,6 +606,8 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 
 		def prepareResponse = new PrepareHostResponse(computeServer: server, disableCloudInit: false, options: [sendIp: false])
 		ServiceResponse<PrepareHostResponse> rtn = ServiceResponse.prepare(prepareResponse)
+        if(server.sourceImage)
+            return rtn
 
 		try {
 			VirtualImage virtualImage
