@@ -151,6 +151,20 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 				optionSource: 'digitalOceanImage'
 			),
 			new OptionType(
+				name: 'osType',
+				category: "provisionType.digitalOcean.custom",
+				code: 'provisionType.digitalOcean.custom.containerType.osTypeId',
+				fieldContext: 'domain',
+				fieldName: 'osType.id',
+				fieldCode: 'gomorpheus.label.osType',
+				fieldLabel: 'OsType',
+				fieldGroup: null,
+				inputType: OptionType.InputType.SELECT,
+				displayOrder: 12,
+				required: false,
+				optionSource: 'osTypes'
+			),
+			new OptionType(
 				name: 'mount logs',
 				category: "provisionType.digitalOcean.custom",
 				code: 'provisionType.digitalOcean.custom.containerType.mountLogs',
