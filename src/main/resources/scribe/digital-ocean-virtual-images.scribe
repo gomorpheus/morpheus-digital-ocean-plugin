@@ -135,7 +135,7 @@ resource "virtual-image" "digitalocean-image-morpheus-ubuntu-22_04" {
 }
 
 resource "os-type-image" "digitalocean-image-morpheus-ubuntu-22_04" {
-  code               = "digitalocean.image.morpheus.ubuntu.20.04"
+  code               = "digitalocean.image.morpheus.ubuntu.22.04"
   provisionType      = "digitalocean"
   virtualImage       = virtual-image.digitalocean-image-morpheus-ubuntu-22_04
   account            = null
