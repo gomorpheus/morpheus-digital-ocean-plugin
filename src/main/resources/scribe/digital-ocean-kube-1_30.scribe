@@ -3,7 +3,7 @@ resource "compute-type-layout" "kubernetes-1_30-ubuntu-22_04-digitalocean-amd64-
   code = "kubernetes-1_30-ubuntu-22_04-digitalocean-amd64-single"
   enabled = true
   name = "MKS Kubernetes 1.30 Cluster on Ubuntu 22.04"
-  sortOrder = 0
+  sortOrder = 10
   computeVersion = "22.04"
   clusterVersion = "1.30.x"
   description = "provision a kubernetes 1.30 cluster on ubuntu 22.04"
