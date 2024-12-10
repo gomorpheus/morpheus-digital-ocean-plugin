@@ -228,6 +228,7 @@ resource "virtual-image" "digitalocean-image-morpheus-centos-9-stream" {
   isCloudInit        = true
   externalId         = "centos-stream-9-x64"
   osType             = "cent.9.64"
+  userData           = "packages: [curl, openssh]"
 }
 
 resource "virtual-image" "digitalocean-image-morpheus-rocky-8_4" {
@@ -276,6 +277,7 @@ resource "virtual-image" "digitalocean-image-morpheus-rocky-9" {
   isCloudInit        = true
   externalId         = "rockylinux-9-x64"
   osType             = "rocky.9.64"
+  userData           = "packages: [curl, openssh]"
 }
 
 resource "virtual-image" "digitalocean-image-morpheus-almalinux-9" {
@@ -292,4 +294,5 @@ resource "virtual-image" "digitalocean-image-morpheus-almalinux-9" {
   isCloudInit        = true
   externalId         = "almalinux-9-x64"
   osType             = "almalinux.9.64"
+  userData           = "packages: [curl, openssh]"
 }
