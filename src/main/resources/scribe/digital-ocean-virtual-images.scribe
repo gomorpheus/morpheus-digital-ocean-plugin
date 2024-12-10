@@ -277,7 +277,6 @@ resource "virtual-image" "digitalocean-image-morpheus-rocky-9" {
   isCloudInit        = true
   externalId         = "rockylinux-9-x64"
   osType             = "rocky.9.64"
-  userData           = "packages: [curl, openssh]"
 }
 
 resource "virtual-image" "digitalocean-image-morpheus-almalinux-9" {
@@ -294,5 +293,4 @@ resource "virtual-image" "digitalocean-image-morpheus-almalinux-9" {
   isCloudInit        = true
   externalId         = "almalinux-9-x64"
   osType             = "almalinux.9.64"
-  userData           = "packages: [curl, openssh]"
 }
