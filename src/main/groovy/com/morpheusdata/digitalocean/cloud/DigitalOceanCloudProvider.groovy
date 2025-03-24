@@ -235,14 +235,14 @@ class DigitalOceanCloudProvider implements CloudProvider {
 				//kubernetes
 				new ComputeServerType(code: 'digitalOceanKubeMaster', name: 'Digital Ocean Kubernetes Master', description: '', platform: PlatformType.linux, nodeType:'kube-master',
 					reconfigureSupported: true, enabled: true, selectable: false, externalDelete: true, managed: true, controlPower: true, controlSuspend: true, creatable: true,
-						supportsConsoleKeymap: true, computeService: null, displayOrder: 10, provisionTypeCode: 'digitalocean',
+						supportsConsoleKeymap: true, computeService: null, displayOrder: 10, provisionTypeCode: 'digitalocean', hasMaintenanceMode: true,
 						hasAutomation: true, containerHypervisor: true, bareMetalHost: false, vmHypervisor: false, agentType: ComputeServerType.AgentType.guest, clusterType: ComputeServerType.ClusterType.kubernetes,
 						computeTypeCode: 'kube-master',
 						optionTypes: []
 				),
 				new ComputeServerType(code: 'digitalOceanKubeWorker', name: 'Digital Ocean Kubernetes Worker', description: '', platform: PlatformType.linux, nodeType:'kube-worker',
 						reconfigureSupported: true, enabled: true, selectable: false, externalDelete: true, managed: true, controlPower: true, controlSuspend: true, creatable: true,
-						supportsConsoleKeymap: true, computeService: null, displayOrder: 10, provisionTypeCode: 'digitalocean',
+						supportsConsoleKeymap: true, computeService: null, displayOrder: 10, provisionTypeCode: 'digitalocean', hasMaintenanceMode: true,
 						hasAutomation: true, containerHypervisor: true, bareMetalHost: false, vmHypervisor: false, agentType: ComputeServerType.AgentType.guest, clusterType: ComputeServerType.ClusterType.kubernetes,
 						computeTypeCode: 'kube-worker',
 						optionTypes: []
