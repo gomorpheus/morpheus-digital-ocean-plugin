@@ -376,6 +376,11 @@ class DigitalOceanCloudProvider implements CloudProvider {
 		apiService = apiService ?: new DigitalOceanApiService()
 		String apiKey = plugin.getAuthConfig(cloud).doApiKey
 		ServiceResponse testResult = apiService.testConnection(apiKey)
+		if(!cloud.getConfigProperty('enableStorageTypeSelection')){
+			cloud.setConfigProperty('enableStorageTypeSelection', 'off')
+			morpheusContext.services.cloud.save(cloud)
+		}
+
 		if(testResult.success) {
 			(new ImagesSync(plugin, cloud, apiService, true)).execute()
 			(new VPCSync(plugin, cloud, apiService)).execute()
