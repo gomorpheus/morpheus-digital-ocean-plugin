@@ -339,13 +339,9 @@ class DigitalOceanCloudProvider implements CloudProvider {
 		log.debug("Initializing Cloud: ${cloud.code}")
 		log.debug("config: ${cloud.configMap}")
 		String apiKey = plugin.getAuthConfig(cloud).doApiKey
-		// set config.enableStorageTypeSelection dont save and hopefully it works
-
-		println "IA AMMASDMFAMSDFMASMDFMASDFMASMDFLKJASDF alsdkfjasdfl laksdjflaksjflkj"
+		
 		cloud.setConfigProperty('enableStorageTypeSelection', 'off')
 		morpheusContext.services.cloud.save(cloud)
-		println cloud.id
-		println '-----------'
 
 		// check account
 		ServiceResponse initResponse = apiService.getAccount(apiKey)
