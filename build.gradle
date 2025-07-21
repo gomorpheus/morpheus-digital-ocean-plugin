@@ -82,7 +82,7 @@ jar {
 			'Morpheus-Logo-Dark': 'assets/digitalocean.svg',
 			'Morpheus-Color': '#ffffff',
 			'Morpheus-Labels': 'Plugin, cloud',
-			'Morpheus-Repo': 'https://github.com/gomorpheus/morpheus-digital-ocean-plugin',
+			'Morpheus-Repo': 'https://github.com/HewlettPackard/morpheus-digital-ocean-plugin',
 			'Morpheus-Min-Appliance-Version': morphApplianceMinVersion,
 		)
 	}
