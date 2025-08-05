@@ -47,7 +47,7 @@ resource "instance-type-layout" "ubuntu-digitalocean-20_04-single" {
   serverType = "vm"
   hasAutoScale = true
   supportsConvertToManaged = true
-  enabled = true
+  enabled = false
   creatable = true
   workloads = [
     workload-type-set.ubuntu-digitalocean-20_04-set

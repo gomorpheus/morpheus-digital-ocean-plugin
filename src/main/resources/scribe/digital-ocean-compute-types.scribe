@@ -28,14 +28,14 @@ resource "compute-server-type" "digital-ocean-linux" {
   computeType          = "docker-host"
 }
 
-resource "workload-type" "docker-digitalOcean-ubuntu-20_04" {
-  code             = "docker-digitalOcean-ubuntu-20.04"
+resource "workload-type" "docker-digitalOcean-ubuntu-22_04" {
+  code             = "docker-digitalOcean-ubuntu-22.04"
   shortName        = "ubuntu"
-  name             = "Docker Ubuntu 20.04"
+  name             = "Docker Ubuntu 22.04"
   ports            = [22]
-  containerVersion = "20.04"
+  containerVersion = "22.04"
   repositoryImage  = ""
-  imageCode        = "morpheus ubuntu 20.04"
+  imageCode        = "morpheus ubuntu 22.04"
   entryPoint       = ""
   mountLogs        = "/var/log"
   statTypeCode     = "vm"
@@ -47,15 +47,15 @@ resource "workload-type" "docker-digitalOcean-ubuntu-20_04" {
   serverType       = "vm"
   providerType     = "digitalocean"
   checkTypeCode    = "vmCheck"
-  virtualImage     = virtual-image.digitalocean-image-morpheus-ubuntu-20_04
+  virtualImage     = virtual-image.digitalocean-image-morpheus-ubuntu-22_04
   containerPorts   = ["ubuntu.22"]
   provisionType    = "digitalocean"
 }
 
-resource "compute-type-set" "docker-digitalOcean-ubuntu-20_04-set" {
-  code                    = "docker-digitalOcean-ubuntu-20.04-set"
+resource "compute-type-set" "docker-digitalOcean-ubuntu-22_04-set" {
+  code                    = "docker-digitalOcean-ubuntu-22.04-set"
   name                    = "docker host"
-  workloadType            = workload-type.docker-digitalOcean-ubuntu-20_04
+  workloadType            = workload-type.docker-digitalOcean-ubuntu-22_04
   computeServerType       = compute-server-types.digital-ocean-linux
   category                = "ubuntu"
   priorityOrder           = 0
@@ -65,6 +65,24 @@ resource "compute-type-set" "docker-digitalOcean-ubuntu-20_04-set" {
   canAddNodes             = true
   installContainerRuntime = true
   installStorageRuntime   = true
+}
+
+resource "compute-type-layout" "docker-digitalOcean-ubuntu-22_04-single" {
+  code              = "docker-digitalOcean-ubuntu-22.04-single"
+  name              = "Digital Ocean Docker Host (Ubuntu 22.04)"
+  sortOrder         = 5
+  computeVersion    = "22.04"
+  description       = "This will provision a single docker host vm in digitalOcean"
+  type              = compute-server-types.digital-ocean-linux
+  serverCount       = 1
+  memoryRequirement = 1024 * 1024 * 1024
+  hasAutoScale      = true
+  enabled           = true
+  groupType         = "docker-cluster"
+  computeServers    = [
+    compute-type-set.docker-digitalOcean-ubuntu-22_04-set
+  ]
+  provisionType = "digitalocean"
 }
 
 resource "compute-type-layout" "docker-digitalOcean-ubuntu-20_04-single" {
@@ -77,6 +95,7 @@ resource "compute-type-layout" "docker-digitalOcean-ubuntu-20_04-single" {
   serverCount       = 1
   memoryRequirement = 1024 * 1024 * 1024
   hasAutoScale      = true
+  enabled           = false
   groupType         = "docker-cluster"
   computeServers    = [
     compute-type-set.docker-digitalOcean-ubuntu-20_04-set
