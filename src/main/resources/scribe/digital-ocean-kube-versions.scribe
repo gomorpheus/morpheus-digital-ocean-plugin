@@ -83,7 +83,7 @@ resource "compute-type-layout" "kubernetes-1_33-ubuntu-24_04-digitalocean-amd64"
 # layout
 resource "compute-type-layout" "kubernetes-1_32-ubuntu-22_04-digitalocean-amd64-single" {
   code = "kubernetes-1_32-ubuntu-22_04-digitalocean-amd64-single"
-  enabled = true
+  enabled = false
   name = "MKS Kubernetes 1.32 Cluster on Ubuntu 22.04"
   sortOrder = 10
   computeVersion = "22.04"
@@ -120,7 +120,7 @@ resource "compute-type-layout" "kubernetes-1_32-ubuntu-22_04-digitalocean-amd64-
 # HA layout
 resource "compute-type-layout" "kubernetes-1_32-ubuntu-22_04-digitalocean-amd64" {
   code = "kubernetes-1_32-ubuntu-22_04-digitalocean-amd64"
-  enabled = true
+  enabled = false
   name = "MKS Kubernetes 1.32 HA Cluster on Ubuntu 22.04"
   sortOrder = 104
   computeVersion = "22.04"
