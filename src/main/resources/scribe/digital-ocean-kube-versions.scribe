@@ -83,7 +83,7 @@ resource "compute-type-layout" "kubernetes-1_33-ubuntu-24_04-digitalocean-amd64"
 # layout
 resource "compute-type-layout" "kubernetes-1_32-ubuntu-22_04-digitalocean-amd64-single" {
   code = "kubernetes-1_32-ubuntu-22_04-digitalocean-amd64-single"
-  enabled = true
+  enabled = false
   name = "MKS Kubernetes 1.32 Cluster on Ubuntu 22.04"
   sortOrder = 10
   computeVersion = "22.04"
@@ -120,7 +120,7 @@ resource "compute-type-layout" "kubernetes-1_32-ubuntu-22_04-digitalocean-amd64-
 # HA layout
 resource "compute-type-layout" "kubernetes-1_32-ubuntu-22_04-digitalocean-amd64" {
   code = "kubernetes-1_32-ubuntu-22_04-digitalocean-amd64"
-  enabled = true
+  enabled = false
   name = "MKS Kubernetes 1.32 HA Cluster on Ubuntu 22.04"
   sortOrder = 104
   computeVersion = "22.04"
@@ -137,6 +137,83 @@ resource "compute-type-layout" "kubernetes-1_32-ubuntu-22_04-digitalocean-amd64"
     compute-type-set.kubernetes-ha-add-master-ubuntu-22_04-digitalocean-amd64-set,
     compute-type-set.kubernetes-ha-final-master-ubuntu-22_04-digitalocean-amd64-set,
     compute-type-set.kubernetes-ubuntu-22_04-worker-digitalocean-amd64-set
+  ]
+  groupType = "kubernetes-cluster"
+  provisionType =  "digitalocean"
+  optionTypes = [
+    "kubernetes.master.podCidr",
+    "kubernetes.master.serviceCidr"
+  ]
+  specTemplates = []
+  packages = [
+    "kubernetes-calico-3-25-0-package",
+    "kubernetes-rook-1-15-0-package",
+    "kubernetes-fluentbit-3-0-7-package",
+    "kubernetes-prometheus-0-12-package",
+    "kubernetes-nginx-ingress-operator-1-12-1-package"
+  ]
+}
+/*
+  -- Version 32 with Ubuntu 24.04 ---
+*/
+
+# layout
+resource "compute-type-layout" "kubernetes-1_32-ubuntu-24_04-digitalocean-amd64-single" {
+  code = "kubernetes-1_32-ubuntu-24_04-digitalocean-amd64-single"
+  enabled = true
+  name = "MKS Kubernetes 1.32 Cluster on Ubuntu 24.04"
+  sortOrder = 10
+  computeVersion = "24.04"
+  clusterVersion = "1.32.x"
+  description = "provision a kubernetes 1.32 cluster on ubuntu 24.04"
+  type = "digitaloceanKubeMaster"
+  serverCount = 4
+  memoryRequirement = 1073741824
+  hasAutoScale = true
+  containerRuntime = "containerd"
+  networkRuntime = "calico"
+  computeServers = [
+    compute-type-set.kubernetes-ubuntu-24_04-digitalocean-amd64-set,
+    compute-type-set.kubernetes-ubuntu-24_04-worker-digitalocean-amd64-set
+  ]
+  groupType = "kubernetes-cluster"
+  provisionType =  "digitalocean"
+  optionTypes = [
+    "kubernetes.master.podCidr",
+    "kubernetes.master.serviceCidr"
+  ]
+  specTemplates = []
+  packages = [
+    "kubernetes-calico-3-25-0-package",
+    "kubernetes-rook-1-15-0-package",
+    "kubernetes-fluentbit-3-0-7-package",
+    "kubernetes-prometheus-0-12-package",
+    "kubernetes-nginx-ingress-operator-1-12-1-package"
+  ]
+}
+
+
+
+# HA layout
+resource "compute-type-layout" "kubernetes-1_32-ubuntu-24_04-digitalocean-amd64" {
+  code = "kubernetes-1_32-ubuntu-24_04-digitalocean-amd64"
+  enabled = true
+  name = "MKS Kubernetes 1.32 HA Cluster on Ubuntu 24.04"
+  sortOrder = 104
+  computeVersion = "24.04"
+  clusterVersion = "1.32.x"
+  description = "provision a high availability kubernetes 1.32 cluster on ubuntu 24.04"
+  type = "digitaloceanKubeMaster"
+  serverCount = 6
+  memoryRequirement = 1073741824
+  hasAutoScale = true
+  containerRuntime = "containerd"
+  networkRuntime = "calico"
+  computeServers = [
+    compute-type-set.kubernetes-ha-master-ubuntu-24_04-digitalocean-amd64-set,
+    compute-type-set.kubernetes-ha-add-master-ubuntu-24_04-digitalocean-amd64-set,
+    compute-type-set.kubernetes-ha-final-master-ubuntu-24_04-digitalocean-amd64-set,
+    compute-type-set.kubernetes-ubuntu-24_04-worker-digitalocean-amd64-set
   ]
   groupType = "kubernetes-cluster"
   provisionType =  "digitalocean"
