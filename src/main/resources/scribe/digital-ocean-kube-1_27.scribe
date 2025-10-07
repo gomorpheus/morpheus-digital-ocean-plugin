@@ -102,7 +102,7 @@ resource "compute-type-layout" "kubernetes-1_27-ubuntu-20_04-digitalocean-amd64-
   type = "digitaloceanKubeMaster"
   serverCount = 4
   memoryRequirement = 1073741824
-  hasAutoScale = true
+  hasAutoScale = false
   containerRuntime = "containerd"
   networkRuntime = "calico"
   config = jsondecode({containerDupdated = true})

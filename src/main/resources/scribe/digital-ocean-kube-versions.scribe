@@ -14,7 +14,7 @@ resource "compute-type-layout" "kubernetes-1_33-ubuntu-24_04-digitalocean-amd64-
   type = "digitaloceanKubeMaster"
   serverCount = 4
   memoryRequirement = 1073741824
-  hasAutoScale = true
+  hasAutoScale = false
   containerRuntime = "containerd"
   networkRuntime = "calico"
   computeServers = [
@@ -51,7 +51,7 @@ resource "compute-type-layout" "kubernetes-1_33-ubuntu-24_04-digitalocean-amd64"
   type = "digitaloceanKubeMaster"
   serverCount = 6
   memoryRequirement = 1073741824
-  hasAutoScale = true
+  hasAutoScale = false
   containerRuntime = "containerd"
   networkRuntime = "calico"
   computeServers = [
@@ -92,7 +92,7 @@ resource "compute-type-layout" "kubernetes-1_32-ubuntu-22_04-digitalocean-amd64-
   type = "digitaloceanKubeMaster"
   serverCount = 4
   memoryRequirement = 1073741824
-  hasAutoScale = true
+  hasAutoScale = false
   containerRuntime = "containerd"
   networkRuntime = "calico"
   computeServers = [
@@ -129,7 +129,7 @@ resource "compute-type-layout" "kubernetes-1_32-ubuntu-22_04-digitalocean-amd64"
   type = "digitaloceanKubeMaster"
   serverCount = 6
   memoryRequirement = 1073741824
-  hasAutoScale = true
+  hasAutoScale = false
   containerRuntime = "containerd"
   networkRuntime = "calico"
   computeServers = [
@@ -169,7 +169,7 @@ resource "compute-type-layout" "kubernetes-1_32-ubuntu-24_04-digitalocean-amd64-
   type = "digitaloceanKubeMaster"
   serverCount = 4
   memoryRequirement = 1073741824
-  hasAutoScale = true
+  hasAutoScale = false
   containerRuntime = "containerd"
   networkRuntime = "calico"
   computeServers = [
@@ -206,7 +206,7 @@ resource "compute-type-layout" "kubernetes-1_32-ubuntu-24_04-digitalocean-amd64"
   type = "digitaloceanKubeMaster"
   serverCount = 6
   memoryRequirement = 1073741824
-  hasAutoScale = true
+  hasAutoScale = false
   containerRuntime = "containerd"
   networkRuntime = "calico"
   computeServers = [
@@ -248,7 +248,7 @@ resource "compute-type-layout" "kubernetes-1_31-ubuntu-22_04-digitalocean-amd64-
   type = "digitaloceanKubeMaster"
   serverCount = 4
   memoryRequirement = 1073741824
-  hasAutoScale = true
+  hasAutoScale = false
   containerRuntime = "containerd"
   networkRuntime = "calico"
   computeServers = [
@@ -285,7 +285,7 @@ resource "compute-type-layout" "kubernetes-1_31-ubuntu-22_04-digitalocean-amd64"
   type = "digitaloceanKubeMaster"
   serverCount = 6
   memoryRequirement = 1073741824
-  hasAutoScale = true
+  hasAutoScale = false
   containerRuntime = "containerd"
   networkRuntime = "calico"
   computeServers = [
@@ -327,7 +327,7 @@ resource "compute-type-layout" "kubernetes-1_30-ubuntu-22_04-digitalocean-amd64-
   type = "digitaloceanKubeMaster"
   serverCount = 4
   memoryRequirement = 1073741824
-  hasAutoScale = true
+  hasAutoScale = false
   containerRuntime = "containerd"
   networkRuntime = "calico"
   computeServers = [
@@ -364,7 +364,7 @@ resource "compute-type-layout" "kubernetes-1_30-ubuntu-22_04-digitalocean-amd64"
   type = "digitaloceanKubeMaster"
   serverCount = 6
   memoryRequirement = 1073741824
-  hasAutoScale = true
+  hasAutoScale = false
   containerRuntime = "containerd"
   networkRuntime = "calico"
   computeServers = [
@@ -405,7 +405,7 @@ resource "compute-type-layout" "kubernetes-1_29-ubuntu-22_04-digitalocean-amd64-
   type = "digitaloceanKubeMaster"
   serverCount = 4
   memoryRequirement = 1073741824
-  hasAutoScale = true
+  hasAutoScale = false
   containerRuntime = "containerd"
   networkRuntime = "calico"
   computeServers = [
@@ -442,7 +442,7 @@ resource "compute-type-layout" "kubernetes-1_29-ubuntu-22_04-digitalocean-amd64"
   type = "digitaloceanKubeMaster"
   serverCount = 6
   memoryRequirement = 1073741824
-  hasAutoScale = true
+  hasAutoScale = false
   containerRuntime = "containerd"
   networkRuntime = "calico"
   computeServers = [
