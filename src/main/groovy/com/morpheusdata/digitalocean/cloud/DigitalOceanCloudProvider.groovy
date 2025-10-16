@@ -123,6 +123,10 @@ class DigitalOceanCloudProvider implements CloudProvider {
 		return true
 	}
 
+	static Boolean hasSecurityGroups() {
+		return true
+	}
+
 	@Override
 	Collection<OptionType> getOptionTypes() {
 		def options = []
