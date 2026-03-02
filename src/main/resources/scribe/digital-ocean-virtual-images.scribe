@@ -7,6 +7,7 @@ resource "virtual-image" "digitalocean-image-morpheus-ubuntu-14_04" {
   imageType          = "qcow2"
   virtualImageType   = "qcow2"
   systemImage        = true
+  isPublic           = true
   installAgent       = true
   computeServerImage = true
   isCloudInit        = true
@@ -26,6 +27,7 @@ resource "virtual-image" "digitalocean-image-morpheus-ubuntu-16_04" {
   imageType          = "qcow2"
   virtualImageType   = "qcow2"
   systemImage        = true
+  isPublic           = true
   installAgent       = true
   computeServerImage = true
   isCloudInit        = true
@@ -59,6 +61,7 @@ resource "virtual-image" "digitalocean-image-morpheus-ubuntu-18_04" {
   imageType          = "qcow2"
   virtualImageType   = "qcow2"
   systemImage        = true
+  isPublic           = true
   installAgent       = true
   computeServerImage = true
   isCloudInit        = true
@@ -91,6 +94,7 @@ resource "virtual-image" "digitalocean-image-morpheus-ubuntu-20_04" {
   imageType          = "qcow2"
   virtualImageType   = "qcow2"
   systemImage        = true
+  isPublic           = true
   installAgent       = true
   computeServerImage = true
   isCloudInit        = true
@@ -124,6 +128,7 @@ resource "virtual-image" "digitalocean-image-morpheus-ubuntu-22_04" {
   imageType          = "qcow2"
   virtualImageType   = "qcow2"
   systemImage        = true
+  isPublic           = true
   installAgent       = true
   computeServerImage = true
   isCloudInit        = true
@@ -154,6 +159,7 @@ resource "virtual-image" "digitalocean-image-morpheus-ubuntu-24_04" {
   imageType          = "qcow2"
   virtualImageType   = "qcow2"
   systemImage        = true
+  isPublic           = true
   installAgent       = true
   computeServerImage = true
   isCloudInit        = true
@@ -184,6 +190,7 @@ resource "virtual-image" "digitalocean-image-morpheus-debian-9" {
   imageType          = "qcow2"
   virtualImageType   = "qcow2"
   systemImage        = true
+  isPublic           = true
   installAgent       = true
   computeServerImage = true
   isCloudInit        = true
@@ -214,6 +221,7 @@ resource "virtual-image" "digitalocean-image-morpheus-debian-10" {
   imageType          = "qcow2"
   virtualImageType   = "qcow2"
   systemImage        = true
+  isPublic           = true
   installAgent       = true
   computeServerImage = true
   isCloudInit        = true
@@ -244,6 +252,7 @@ resource "virtual-image" "digitalocean-image-morpheus-debian-11" {
   imageType          = "qcow2"
   virtualImageType   = "qcow2"
   systemImage        = true
+  isPublic           = true
   installAgent       = true
   computeServerImage = true
   isCloudInit        = true
@@ -274,6 +283,7 @@ resource "virtual-image" "digitalocean-image-morpheus-debian-12" {
   imageType          = "qcow2"
   virtualImageType   = "qcow2"
   systemImage        = true
+  isPublic           = true
   installAgent       = true
   computeServerImage = true
   isCloudInit        = true
@@ -304,6 +314,7 @@ resource "virtual-image" "digitalocean-image-morpheus-centos-7_3" {
   imageType          = "qcow2"
   virtualImageType   = "qcow2"
   systemImage        = true
+  isPublic           = true
   installAgent       = true
   computeServerImage = true
   isCloudInit        = true
@@ -334,6 +345,7 @@ resource "virtual-image" "digitalocean-image-morpheus-centos-7" {
   imageType          = "qcow2"
   virtualImageType   = "qcow2"
   systemImage        = true
+  isPublic           = true
   installAgent       = true
   computeServerImage = true
   isCloudInit        = true
@@ -364,6 +376,7 @@ resource "virtual-image" "digitalocean-image-morpheus-centos-8-stream" {
   imageType          = "qcow2"
   virtualImageType   = "qcow2"
   systemImage        = true
+  isPublic           = true
   installAgent       = true
   computeServerImage = true
   isCloudInit        = true
@@ -394,6 +407,7 @@ resource "virtual-image" "digitalocean-image-morpheus-centos-9-stream" {
   imageType          = "qcow2"
   virtualImageType   = "qcow2"
   systemImage        = true
+  isPublic           = true
   installAgent       = true
   computeServerImage = true
   isCloudInit        = true
@@ -424,6 +438,7 @@ resource "virtual-image" "digitalocean-image-morpheus-rocky-8_4" {
   imageType          = "qcow2"
   virtualImageType   = "qcow2"
   systemImage        = true
+  isPublic           = true
   installAgent       = true
   computeServerImage = true
   isCloudInit        = true
@@ -454,6 +469,7 @@ resource "virtual-image" "digitalocean-image-morpheus-rocky-8_6" {
   imageType          = "qcow2"
   virtualImageType   = "qcow2"
   systemImage        = true
+  isPublic           = true
   installAgent       = true
   computeServerImage = true
   isCloudInit        = true
@@ -481,6 +497,7 @@ resource "virtual-image" "digitalocean-image-morpheus-rocky-9" {
   imageType          = "qcow2"
   virtualImageType   = "qcow2"
   systemImage        = true
+  isPublic           = true
   installAgent       = true
   computeServerImage = true
   isCloudInit        = true
@@ -511,6 +528,7 @@ resource "virtual-image" "digitalocean-image-morpheus-almalinux-9" {
   imageType          = "qcow2"
   virtualImageType   = "qcow2"
   systemImage        = true
+  isPublic           = true
   installAgent       = true
   computeServerImage = true
   isCloudInit        = true
