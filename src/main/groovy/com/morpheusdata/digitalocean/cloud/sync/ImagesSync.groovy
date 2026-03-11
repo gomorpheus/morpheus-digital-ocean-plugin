@@ -62,16 +62,16 @@ class ImagesSync {
 	def execute() {
 		log.debug("ImagesSync execute: ${cloud}, userImages: ${this.userImages}")
 		try {
+			VirtualImageType doImageType = morpheusContext.async.virtualImage.type.find(
+				new DataQuery().withFilter("code", "digitalocean")
+			).blockingGet()
+			migrateImageTypes(doImageType)
 			String imageCategory = userImages ? "digitalocean.image.user.${cloud.code}" : "digitalocean.image.os"
 
-			List<VirtualImage> cloudItems = listImages(this.userImages)
+			List<VirtualImage> cloudItems = listImages(this.userImages, doImageType)
 
 			Observable<VirtualImageLocationIdentityProjection> existingRecords = morpheusContext.async.virtualImage.location.listIdentityProjections(
 				new DataQuery().withFilters(
-					new DataOrFilter(
-						new DataFilter<String>("virtualImage.imageType", "qcow2"),
-						new DataFilter<String>("virtualImage.virtualImageType.code", "qcow2")
-					),
 					new DataFilter("virtualImage.category", imageCategory),
 					new DataFilter<String>("imageRegion", cloud.regionCode),
 					new DataFilter<String>("refType", "ComputeZone"),
@@ -97,6 +97,8 @@ class ImagesSync {
 			}.onDelete { removeItems ->
 				removeMissingVirtualImages(removeItems)
 			}.start()
+			// Run migration again to fix any images created during this sync whose virtualImageType was not set by create()
+			migrateImageTypes(doImageType)
 		} catch(e) {
 			log.error("Error in execute : ${e}", e)
 		}
@@ -240,10 +242,20 @@ class ImagesSync {
 
 	private removeMissingVirtualImages(Collection<VirtualImageLocationIdentityProjection> removeList) {
 		log.debug "removeMissingVirtualImages: ${cloud} ${removeList.size()}"
-		morpheusContext.async.virtualImage.location.remove(removeList).blockingGet()
+	    morpheusContext.async.virtualImage.location.remove(removeList).blockingGet()
+	   
+	    // Remove orphaned VirtualImages (no remaining locations)
+	    List<Long> virtualImageIds = removeList.collect { it.virtualImage?.id }.findAll { it != null }
+	    if (virtualImageIds) {
+	        def orphans = morpheusContext.async.virtualImage.listById(virtualImageIds).toList().blockingGet().findAll {
+	            !it.imageLocations || it.imageLocations.isEmpty()
+	        }
+	        if (orphans) {
+	            morpheusContext.async.virtualImage.remove(orphans).blockingGet()
+	        }
+	    }
 	}
-
-	List<VirtualImage> listImages(Boolean userImages) {
+	List<VirtualImage> listImages(Boolean userImages, VirtualImageType doImageType) {
 		log.debug("list ${userImages ? 'User' : 'OS'} Images")
 		List<VirtualImage> virtualImages = []
 
@@ -269,7 +281,7 @@ class ImagesSync {
 					code       : "${imageCodeBase}${userImages ? ".${cloud.code}.${it.id}" : ".${it.id}"}",
 					category   : "${imageCodeBase}${userImages ? ".${cloud.code}" : ""}",
 					imageType  : ImageType.qcow2,
-					virtualImageType: new VirtualImageType(code: "qcow2"),
+					virtualImageType: doImageType,
 					platform   : it.distribution == "Unknown" ? PlatformType.unknown : PlatformType.linux,
 					minDisk    : it.min_disk_size,
 					locations  : it.regions,
@@ -307,6 +319,36 @@ class ImagesSync {
 
 	List<String> getImageTypes() {
 		return plugin.getProvidersByType(ProvisionProvider).collect { ProvisionProvider pp -> pp.virtualImageTypes.collect { it.code } }.flatten().unique()
+	}
+
+	private void migrateImageTypes(VirtualImageType doImageType) {
+		try {
+			if (!doImageType) {
+				log.warn("ImagesSync: digitalocean virtual image type not found, skipping migration")
+				return
+			}
+			log.info("ImagesSync: migrateImageTypes - doImageType id=${doImageType.id} code=${doImageType.code}")
+			def staleImages = morpheusContext.async.virtualImage.list(
+				new DataQuery().withFilters(
+					new DataFilter("category", "=~", "digitalocean.image%"),
+					new DataOrFilter(
+						new DataFilter("virtualImageType.id", null),
+						new DataFilter("virtualImageType.code", "!=", "digitalocean")
+					)
+				)
+			).toList().blockingGet()
+			if (staleImages) {
+				log.info("ImagesSync: migrating ${staleImages.size()} virtual images to digitalocean image type")
+				staleImages.each {
+					it.virtualImageType = doImageType
+				}
+				morpheusContext.async.virtualImage.save(staleImages, cloud).blockingGet()
+			} else {
+				log.info("ImagesSync: no stale virtual images to migrate")
+			}
+		} catch(e) {
+			log.error("Error migrating DigitalOcean virtual image types: ${e}", e)
+		}
 	}
 
 	ServiceResponse clean(Map opts=[:]) {
