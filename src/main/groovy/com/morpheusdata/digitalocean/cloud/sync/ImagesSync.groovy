@@ -65,7 +65,6 @@ class ImagesSync {
 			VirtualImageType doImageType = morpheusContext.async.virtualImage.type.find(
 				new DataQuery().withFilter("code", "digitalocean")
 			).blockingGet()
-			migrateImageTypes(doImageType)
 			String imageCategory = userImages ? "digitalocean.image.user.${cloud.code}" : "digitalocean.image.os"
 
 			List<VirtualImage> cloudItems = listImages(this.userImages, doImageType)
@@ -97,8 +96,6 @@ class ImagesSync {
 			}.onDelete { removeItems ->
 				removeMissingVirtualImages(removeItems)
 			}.start()
-			// Run migration again to fix any images created during this sync whose virtualImageType was not set by create()
-			migrateImageTypes(doImageType)
 		} catch(e) {
 			log.error("Error in execute : ${e}", e)
 		}
@@ -144,6 +141,7 @@ class ImagesSync {
 		log.debug("updateMatchedVirtualImages: ${cloud} ${regionCode} ${updateList.size()}")
 		def adds = []
 		def removes = []
+		def saveImages = []
 		for(def updateItem in updateList) {
 			log.debug("Existing ${updateItem.existingItem.name} location found: ${updateItem.existingItem.imageLocations.find { it.refType == "ComputeZone" && it.refId == cloud.id && it.externalId == updateItem.masterItem.externalId }}")
 			if(!updateItem.existingItem.imageLocations.find { it.refType == "ComputeZone" && it.refId == cloud.id && it.externalId == updateItem.masterItem.externalId }) {
@@ -158,6 +156,15 @@ class ImagesSync {
 					imageRegion: regionCode,
 					public: updateItem.masterItem.public
 				)
+				// Keep VirtualImage.externalId in sync so provisioning uses the current DO image ID
+				if(updateItem.existingItem.externalId != updateItem.masterItem.externalId) {
+					updateItem.existingItem.externalId = updateItem.masterItem.externalId
+					saveImages << updateItem.existingItem
+				}
+				if(updateItem.existingItem.virtualImageType?.code != 'digitalocean') {
+					updateItem.existingItem.virtualImageType = updateItem.masterItem.virtualImageType
+					if(!saveImages.contains(updateItem.existingItem)) saveImages << updateItem.existingItem
+				}
 			}
 
 			//prune duplicates
@@ -178,6 +185,9 @@ class ImagesSync {
 		}
 		if(removes) {
 			morpheusContext.async.virtualImage.location.bulkRemove(removes).blockingGet()
+		}
+		if(saveImages) {
+			morpheusContext.async.virtualImage.save(saveImages, cloud).blockingGet()
 		}
 	}
 
@@ -213,6 +223,18 @@ class ImagesSync {
 			if(existingItem.externalId != cloudItem.externalId) {
 				existingItem.externalId = cloudItem.externalId
 				save = true
+			}
+
+			// Keep VirtualImage.externalId in sync with its location's externalId
+			if(virtualImage.externalId != existingItem.externalId) {
+				virtualImage.externalId = existingItem.externalId
+				saveImage = true
+			}
+
+			// Ensure virtualImageType is set correctly
+			if(virtualImage.virtualImageType?.code != 'digitalocean') {
+				virtualImage.virtualImageType = cloudItem.virtualImageType
+				saveImage = true
 			}
 
 			def shouldUpdatePublic = existingItem.public != cloudItem.public
