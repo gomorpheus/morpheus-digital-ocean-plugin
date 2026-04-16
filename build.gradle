@@ -22,8 +22,8 @@ apply plugin: 'asset-pipeline'
 apply plugin: 'com.morpheusdata.morpheus-plugin-gradle'
 
 group 'com.morpheusdata.digitalocean'
-sourceCompatibility = '1.11'
-targetCompatibility = '1.11'
+sourceCompatibility = '25'
+targetCompatibility = '25'
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
 repositories {
@@ -37,11 +37,16 @@ repositories {
 
 configurations {
 	provided
+	configureEach {
+		resolutionStrategy.capabilitiesResolution.all {
+			selectHighestVersion()
+		}
+	}
 }
 
 dependencies {
 	provided "com.morpheusdata:morpheus-plugin-api:$morphPluginApiVersion"
-	provided "org.codehaus.groovy:groovy-all:$groovyVersion"
+	provided "org.apache.groovy:groovy-all:$groovyVersion"
 	implementation "org.slf4j:slf4j-api:$slf4jVersion"
 	implementation "org.slf4j:slf4j-parent:$slf4jVersion"
 	implementation 'org.apache.httpcomponents:httpclient:4.5.3'
@@ -56,7 +61,7 @@ dependencies {
 		exclude module: 'groovy-all'
 	}
 
-	testImplementation "org.codehaus.groovy:groovy-all:$groovyVersion"
+	testImplementation "org.apache.groovy:groovy-all:$groovyVersion"
 	testImplementation 'net.bytebuddy:byte-buddy:1.9.3'
 	testImplementation 'org.objenesis:objenesis:2.6'
 	testImplementation "org.spockframework:spock-core:$spockVersion"

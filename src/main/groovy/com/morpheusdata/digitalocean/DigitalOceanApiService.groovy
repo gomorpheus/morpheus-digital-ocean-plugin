@@ -223,10 +223,10 @@ class DigitalOceanApiService {
 		if (results.success) {
 			rtn = checkActionComplete(apiKey, results.data.action.id.toString())
 		} else {
-			rtn.content = results.content
-			rtn.errorCode = results.erroCode
+			rtn.content = results.content ?: results.data?.toString()
+			rtn.errorCode = results.errorCode
 			rtn.msg = results.errorCode
-			rtn.error = response.data
+			rtn.error = results.data
 		}
 
 		return rtn

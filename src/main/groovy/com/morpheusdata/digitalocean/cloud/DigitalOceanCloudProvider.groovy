@@ -350,7 +350,7 @@ class DigitalOceanCloudProvider implements CloudProvider {
 		// check account
 		ServiceResponse initResponse = apiService.getAccount(apiKey)
 		if (initResponse.success && initResponse.data.status == 'active') {
-			serviceResponse = new ServiceResponse(success: true, content: initResponse.content)
+			serviceResponse = new ServiceResponse(success: true, content: initResponse.content ?: initResponse.data?.toString())
 
 			refreshDaily(cloud, apiService)
 			refresh(cloud, apiService)
@@ -367,7 +367,7 @@ class DigitalOceanCloudProvider implements CloudProvider {
 				log.debug("no morpheus keys found")
 			}
 		} else {
-			serviceResponse = new ServiceResponse(success: false, msg: initResponse.errorCode, content: initResponse.content)
+			serviceResponse = new ServiceResponse(success: false, msg: initResponse.errorCode, content: initResponse.content ?: initResponse.data?.toString())
 		}
 
 		serviceResponse

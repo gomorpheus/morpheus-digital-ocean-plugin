@@ -558,7 +558,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 		} else {
 			def errorMessage = getErrorMessage(response.errorCode, response.results)
 			log.debug("Failed to create droplet: $errorMessage")
-			return new ServiceResponse(success: false, msg: errorMessage, content: response.content, error: response.data)
+			return new ServiceResponse(success: false, msg: errorMessage, content: response.content ?: response.data?.toString(), error: response.data)
 		}
 	}
 
@@ -686,7 +686,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 		}
 
 		if (response.success) {
-			log.debug("Droplet Created ${response.content}")
+			log.debug("Droplet Created ${response.data}")
 
 			def droplet = response.data
 			ProvisionResponse provisionResponse = dropletToProvisionResponse(droplet, callbackOpts)
@@ -702,7 +702,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 		} else {
 			def errorMessage = getErrorMessage(response.errorCode, response.results)
 			log.debug("Failed to create droplet: $errorMessage")
-			return new ServiceResponse(success: false, msg: errorMessage, content: response.content, error: response.data)
+			return new ServiceResponse(success: false, msg: errorMessage, content: response.content ?: response.data?.toString(), error: response.data)
 		}
 	}
 

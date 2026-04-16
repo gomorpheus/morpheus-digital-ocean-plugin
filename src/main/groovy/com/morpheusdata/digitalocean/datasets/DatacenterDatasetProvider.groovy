@@ -158,8 +158,4 @@ class DatacenterDatasetProvider extends AbstractDatasetProvider<ReferenceData, L
 		return item.id
 	}
 
-	@Override
-	boolean isPlugin() {
-		return true
-	}
 }
