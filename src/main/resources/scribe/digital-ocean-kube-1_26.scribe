@@ -94,7 +94,7 @@ resource "compute-type-set" "kubernetes-1_26-ubuntu-20_04-worker-digitalocean-am
 resource "compute-type-layout" "kubernetes-1_26-ubuntu-20_04-digitalocean-amd64-single" {
   code = "kubernetes-1.26-ubuntu-20.04-digitalocean-amd64-single"
   enabled = false
-  name = "MKS Kubernetes 1.26 Cluster on Ubuntu 20.04"
+  name = "HKS Kubernetes 1.26 Cluster on Ubuntu 20.04"
   sortOrder = 93
   computeVersion = "20.04"
   clusterVersion = "1.26.x"
