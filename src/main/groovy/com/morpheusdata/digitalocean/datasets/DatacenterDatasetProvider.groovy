@@ -157,9 +157,4 @@ class DatacenterDatasetProvider extends AbstractDatasetProvider<ReferenceData, L
 	Long itemValue(ReferenceData item) {
 		return item.id
 	}
-
-	@Override
-	boolean isPlugin() {
-		return true
-	}
 }

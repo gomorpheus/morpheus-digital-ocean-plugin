@@ -54,11 +54,6 @@ class DigitalOceanSnapshotProvider extends AbstractMorpheusBackupTypeProvider {
 	}
 
 	@Override
-	boolean isPlugin() {
-		return true
-	}
-
-	@Override
 	String getContainerType() {
 		return 'single'
 	}
