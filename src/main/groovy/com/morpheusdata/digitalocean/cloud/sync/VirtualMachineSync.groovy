@@ -106,7 +106,7 @@ class VirtualMachineSync {
 		for(update in updateList) {
 			ComputeServer currentServer = update.existingItem
 			Map cloudItem = update.masterItem
-			if(currentServer.status != 'provisioning') {
+			if(currentServer.status != 'provisioning' && currentServer.status != 'deprovisioning') {
 				try {
 					def doSave = false
 					def name = cloudItem.name
