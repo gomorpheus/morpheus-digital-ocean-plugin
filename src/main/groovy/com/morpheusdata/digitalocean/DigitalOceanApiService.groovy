@@ -35,6 +35,7 @@ import com.morpheusdata.core.util.HttpApiClient.RequestOptions
 @Slf4j
 class DigitalOceanApiService {
 	protected static final String DIGITAL_OCEAN_ENDPOINT = 'https://api.digitalocean.com'
+	long actionPollIntervalMs = 1000l * 10l
 
 	HttpApiClient apiClient
 
@@ -238,11 +239,19 @@ class DigitalOceanApiService {
 			def attempts = 0
 			while (pending) {
 				log.debug("waiting for action complete...")
-				sleep(1000l * 10l)
+				sleep(actionPollIntervalMs)
 				ServiceResponse actionDetail = getAction(apiKey, actionId)
 				if (actionDetail.success == true && actionDetail?.data?.status) {
 					def tmpState = actionDetail.data.status
-					if (tmpState == 'completed' || tmpState == 'failed') {
+					if (tmpState == 'completed') {
+						return actionDetail
+					}
+					// MORPH-3706: a droplet action that finished in an errored state is not a success.
+					// getAction only reports whether the HTTP lookup worked, so returning it verbatim
+					// made failed power_on/shutdown/resize actions look successful to the caller.
+					if (tmpState == 'errored' || tmpState == 'failed') {
+						actionDetail.success = false
+						actionDetail.msg = "Droplet action ${actionId} ${tmpState}"
 						return actionDetail
 					}
 				}

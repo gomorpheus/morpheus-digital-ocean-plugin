@@ -61,6 +61,12 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 	DigitalOceanPlugin plugin
 	MorpheusContext morpheusContext
 
+	/** Injectable so provider behaviour can be exercised without live DigitalOcean API calls. */
+	DigitalOceanApiService apiService = new DigitalOceanApiService()
+
+	int powerOnMaxAttempts = 3
+	long powerOnRetryIntervalMs = 10000l
+
 	DigitalOceanProvisionProvider(DigitalOceanPlugin plugin, MorpheusContext morpheusContext) {
 		this.plugin = plugin
 		this.morpheusContext = morpheusContext
@@ -78,13 +84,54 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 	}
 
 	@Override
-	ServiceResponse startServer(ComputeServer computeServer) {
-		return ServiceResponse.success()
+	ServiceResponse startServer(ComputeServer computeServer, DigitalOceanApiService apiService=null) {
+		apiService = apiService ?: this.apiService
+		String dropletId = computeServer.externalId
+		String apiKey = plugin.getAuthConfig(computeServer.cloud).doApiKey
+		log.debug("startServer: ${dropletId}")
+		if (!dropletId) {
+			log.debug("no Droplet ID provided")
+			return new ServiceResponse(success: false, msg: 'No Droplet ID provided')
+		}
+		return powerOnServer(apiKey, dropletId, apiService)
+	}
+
+	/**
+	 * MORPH-3706: DigitalOcean rejects a droplet action while another action is still settling on the
+	 * same droplet, which is exactly the window a post-resize power on lands in. Retry a bounded number
+	 * of times so a transient conflict does not leave the guest powered off.
+	 */
+	protected ServiceResponse powerOnServer(String apiKey, String dropletId, DigitalOceanApiService apiService=null) {
+		apiService = apiService ?: this.apiService
+		ServiceResponse rtn = null
+		for (int attempt = 0; attempt < powerOnMaxAttempts; attempt++) {
+			if (attempt > 0) {
+				sleep(powerOnRetryIntervalMs)
+			}
+			rtn = apiService.performDropletAction(apiKey, dropletId, 'power_on')
+			if (rtn?.success) {
+				return rtn
+			}
+			log.warn("power_on of droplet ${dropletId} failed (attempt ${attempt + 1}/${powerOnMaxAttempts}): ${rtn?.msg}")
+		}
+		return rtn ?: new ServiceResponse(success: false, msg: "Failed to power on droplet ${dropletId}")
 	}
 
 	@Override
-	ServiceResponse stopServer(ComputeServer computeServer) {
-		return ServiceResponse.success()
+	ServiceResponse stopServer(ComputeServer computeServer, DigitalOceanApiService apiService=null) {
+		apiService = apiService ?: this.apiService
+		String dropletId = computeServer.externalId
+		String apiKey = plugin.getAuthConfig(computeServer.cloud).doApiKey
+		log.debug("stopServer: ${dropletId}")
+		if (!dropletId) {
+			log.debug("no Droplet ID provided")
+			return new ServiceResponse(success: false, msg: 'No Droplet ID provided')
+		}
+		ServiceResponse response = apiService.performDropletAction(apiKey, dropletId, 'shutdown')
+		if (response.success) {
+			return response
+		}
+		return powerOffServer(apiKey, dropletId, apiService)
 	}
 
 	@Override
@@ -445,12 +492,13 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 
 	@Override
 	ServiceResponse<ProvisionResponse> runWorkload(Workload workload, WorkloadRequest workloadRequest, Map opts) {
-		DigitalOceanApiService apiService = new DigitalOceanApiService()
+		DigitalOceanApiService apiService = this.apiService
 		log.debug("runWorkload: ${workload.configs} ${opts}")
 		def containerConfig = new groovy.json.JsonSlurper().parseText(workload.configs ?: '{}')
 		ComputeServer server = workload.server
 		Cloud cloud = server?.cloud
 		CloudPool cloudPool = server?.resourcePool
+		String cloudPoolExternalId = cloudPool?.externalId ?: cloud?.configMap?.vpc
 
 		String apiKey = plugin.getAuthConfig(cloud).doApiKey
 		if (!apiKey) {
@@ -515,7 +563,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 			'backups'           : "${opts.doBackups == true}",
 			'ipv6'              : "${opts.ipv6 == true}",
 			'user_data'         : userData,
-			'vpc_uuid'			: cloudPool.externalId
+			'vpc_uuid'			: cloudPoolExternalId
 		]
 
 		// Add ssh keys provided by morpheus core services, e.g. Account or User ssh keys
@@ -564,7 +612,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 
 	@Override
 	ServiceResponse finalizeWorkload(Workload workload) {
-		DigitalOceanApiService apiService = new DigitalOceanApiService()
+		DigitalOceanApiService apiService = this.apiService
 		ServiceResponse rtn = ServiceResponse.prepare()
 		log.debug("finalizeWorkload: ${workload?.id}")
 		try {
@@ -639,7 +687,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 
 	@Override
 	ServiceResponse<ProvisionResponse> runHost(ComputeServer server, HostRequest hostRequest, Map opts) {
-		DigitalOceanApiService apiService = new DigitalOceanApiService()
+		DigitalOceanApiService apiService = this.apiService
 		CloudPool cloudPool = server?.resourcePool
 		String cloudPoolExternalId = cloudPool?.externalId ?: server.cloud.configMap.vpc
 		log.debug("cloudPoolExternalId: ${cloudPoolExternalId}")
@@ -708,7 +756,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 
 	@Override
 	ServiceResponse<ProvisionResponse> waitForHost(ComputeServer server) {
-		DigitalOceanApiService apiService = new DigitalOceanApiService()
+		DigitalOceanApiService apiService = this.apiService
 
 		log.debug("waitForHost: ${server}")
 		try {
@@ -721,7 +769,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 
 	@Override
 	ServiceResponse finalizeHost(ComputeServer server) {
-		DigitalOceanApiService apiService = new DigitalOceanApiService()
+		DigitalOceanApiService apiService = this.apiService
 		ServiceResponse rtn = ServiceResponse.prepare()
 		log.debug("finalizeHost: ${server?.id}")
 		try {
@@ -758,20 +806,20 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 
 	@Override
 	ServiceResponse resizeServer(ComputeServer server, ResizeRequest resizeRequest, Map opts) {
-		DigitalOceanApiService apiService = new DigitalOceanApiService()
+		DigitalOceanApiService apiService = this.apiService
 		log.debug("resizeServer: ${server} ${resizeRequest} ${opts}")
 		internalResizeServer(server, resizeRequest, apiService)
 	}
 
 	@Override
 	ServiceResponse resizeWorkload(Instance instance, Workload workload, ResizeRequest resizeRequest, Map opts) {
-		DigitalOceanApiService apiService = new DigitalOceanApiService()
+		DigitalOceanApiService apiService = this.apiService
 		log.debug("resizeWorkload: ${instance} ${workload} ${resizeRequest} ${opts}")
 		internalResizeServer(workload.server, resizeRequest, apiService)
 	}
 
 	private ServiceResponse internalResizeServer(ComputeServer server, ResizeRequest resizeRequest, DigitalOceanApiService apiService=null) {
-		apiService = apiService ?: new DigitalOceanApiService()
+		apiService = apiService ?: this.apiService
 		log.debug("internalResizeServer: ${server} ${resizeRequest}")
 		ServiceResponse rtn = ServiceResponse.success()
 		try {
@@ -799,7 +847,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 
 	@Override
 	ServiceResponse<ProvisionResponse> stopWorkload(Workload workload, DigitalOceanApiService apiService=null) {
-		apiService = apiService ?: new DigitalOceanApiService()
+		apiService = apiService ?: this.apiService
 		String dropletId = workload.server.externalId
 		String apiKey = plugin.getAuthConfig(workload.server.cloud).doApiKey
 		log.debug("stopWorkload: ${dropletId}")
@@ -818,7 +866,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 
 	@Override
 	ServiceResponse<ProvisionResponse> startWorkload(Workload workload, DigitalOceanApiService apiService=null) {
-		apiService = apiService ?: new DigitalOceanApiService()
+		apiService = apiService ?: this.apiService
 		String dropletId = workload.server.externalId
 		String apiKey = plugin.getAuthConfig(workload.server.cloud).doApiKey
 		log.debug("startWorkload: ${dropletId}")
@@ -831,7 +879,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 
 	@Override
 	ServiceResponse restartWorkload(Workload workload) {
-		DigitalOceanApiService apiService = new DigitalOceanApiService()
+		DigitalOceanApiService apiService = this.apiService
 
 		ServiceResponse rtn = ServiceResponse.prepare()
 		log.debug("restartWorkload: ${workload.id}")
@@ -847,7 +895,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 
 	@Override
 	ServiceResponse removeWorkload(Workload workload, Map opts) {
-		DigitalOceanApiService apiService = new DigitalOceanApiService()
+		DigitalOceanApiService apiService = this.apiService
 
 		String dropletId = workload.server.externalId
 		log.debug("removeWorkload: ${dropletId}")
@@ -872,7 +920,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 
 	@Override
 	ServiceResponse<ProvisionResponse> getServerDetails(ComputeServer server, DigitalOceanApiService apiService=null) {
-		apiService = apiService ?: new DigitalOceanApiService()
+		apiService = apiService ?: this.apiService
 		log.debug("getServerDetails: $server.id")
 		ServiceResponse rtn = ServiceResponse.prepare(new ProvisionResponse())
 		String apiKey = plugin.getAuthConfig(server.cloud).doApiKey
@@ -903,7 +951,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 	}
 
 	ServiceResponse<ProvisionResponse> powerOffServer(String apiKey, String dropletId, DigitalOceanApiService apiService=null) {
-		apiService = apiService ?: new DigitalOceanApiService()
+		apiService = apiService ?: this.apiService
 		log.debug("powerOffServer: $dropletId")
 		return apiService.performDropletAction(apiKey, dropletId, 'power_off')
 	}
@@ -958,7 +1006,7 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 		return rtn
 	}
 
-	private Map<String, ComputeServerType> getAllComputeServerTypes() {
-		def computeServerTypes = morpheusContext.async.cloud.getComputeServerTypes(cloud.id).blockingGet().collectEntries { [it.code, it] }
+	private Map<String, ComputeServerType> getAllComputeServerTypes(Long cloudId) {
+		return morpheusContext.async.cloud.getComputeServerTypes(cloudId).blockingGet().collectEntries { [it.code, it] }
 	}
 }

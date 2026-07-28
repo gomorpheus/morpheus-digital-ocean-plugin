@@ -1,6 +1,7 @@
 package com.morpheusdata.digitalocean
 
-import com.morpheusdata.response.ProvisionResponse
+
+import com.morpheusdata.response.ServiceResponse
 import spock.lang.Specification
 import spock.lang.Subject
 
@@ -13,25 +14,49 @@ class DigitalOceanApiServiceSpec extends Specification {
 		service = new DigitalOceanApiService()
 	}
 
-	void "dropletToProvisionResponse"() {
+	void "checkActionComplete reports a completed action as successful"() {
 		given:
-		def droplet = [
-				id      : '1111',
-				networks: [
-						v4: [
-								[ip_address: '10.10.10.10', type: 'public'],
-								[ip_address: '192.168.0.10', type: 'private'],
-						]
-				]
-		]
-		ProvisionResponse expected = new ProvisionResponse(externalId: '1111', publicIp: '10.10.10.10', privateIp: '192.168.0.10', success:true)
+		def service = Spy(DigitalOceanApiService)
+		service.actionPollIntervalMs = 0l
 
 		when:
-		def resp = service.dropletToProvisionResponse(droplet)
+		def resp = service.checkActionComplete('abc123', '999')
 
 		then:
-		resp.externalId == expected.externalId
-		resp.publicIp == expected.publicIp
-		resp.privateIp == expected.privateIp
+		1 * service.getAction('abc123', '999') >> new ServiceResponse(success: true, data: [status: 'completed'])
+		resp.success == true
+	}
+
+	void "checkActionComplete reports a #status action as failed (MORPH-3706)"() {
+		given:
+		def service = Spy(DigitalOceanApiService)
+		service.actionPollIntervalMs = 0l
+
+		when:
+		def resp = service.checkActionComplete('abc123', '999')
+
+		then:
+		1 * service.getAction('abc123', '999') >> new ServiceResponse(success: true, data: [status: status])
+		resp.success == false
+		resp.data.status == status
+
+		where:
+		status << ['errored', 'failed']
+	}
+
+	void "checkActionComplete keeps polling while the action is in progress"() {
+		given:
+		def service = Spy(DigitalOceanApiService)
+		service.actionPollIntervalMs = 0l
+
+		when:
+		def resp = service.checkActionComplete('abc123', '999')
+
+		then:
+		2 * service.getAction('abc123', '999') >>> [
+			new ServiceResponse(success: true, data: [status: 'in-progress']),
+			new ServiceResponse(success: true, data: [status: 'completed'])
+		]
+		resp.success == true
 	}
 }

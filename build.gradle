@@ -99,6 +99,7 @@ task(console, dependsOn: 'classes', type: JavaExec) {
 }
 
 test {
+	useJUnitPlatform()
 	testLogging {
 		exceptionFormat = 'full'
 		showStandardStreams = true

@@ -17,8 +17,10 @@ import com.morpheusdata.model.provisioning.UsersConfiguration
 import com.morpheusdata.model.Workload
 import com.morpheusdata.model.provisioning.WorkloadRequest
 import com.morpheusdata.request.ResizeRequest
+import com.morpheusdata.response.ProvisionResponse
 import com.morpheusdata.response.ServiceResponse
 import groovy.json.JsonSlurper
+import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.core.Single
 import org.apache.http.client.methods.HttpPost
 import spock.lang.Shared
@@ -53,6 +55,10 @@ class DigitalOceanProvisionProviderSpec extends Specification {
 		context.getCloud() >> cloudContext
 		context.getVirtualImage() >> virtualImageContext
 		context.getProvision() >> provisionService
+		def asyncServices = Mock(com.morpheusdata.core.MorpheusAsyncServices)
+		asyncServices.getCloud() >> cloudContext
+		context.getAsync() >> asyncServices
+		cloudContext.getComputeServerTypes(_) >> Single.just([])
 		provider = new DigitalOceanProvisionProvider(plugin, context)
 		apiService = Mock(DigitalOceanApiService)
 		provider.apiService = apiService
@@ -60,7 +66,7 @@ class DigitalOceanProvisionProviderSpec extends Specification {
 
 	void "startWorkload"() {
 		given:
-		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [doApiKey: 'abc123'])
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [apiKey: 'abc123'])
 		Workload workload = new Workload()
 		workload.server = new ComputeServer(name: 'serv1', externalId: 'drop1111', cloud: cloud)
 
@@ -68,14 +74,14 @@ class DigitalOceanProvisionProviderSpec extends Specification {
 		def resp = provider.startWorkload(workload)
 
 		then:
-		1 * apiService.performDropletAction('abc123', 'drop1111', ['type': 'power_on']) >> new ServiceResponse(success: true, data: actionSuccessJson('power_on').action)
+		1 * apiService.performDropletAction('abc123', 'drop1111', 'power_on') >> new ServiceResponse(success: true, data: actionSuccessJson('power_on').action)
 		resp.success == true
 		resp.data.id == 1092647540
 	}
 
 	void "startWorkload - no droplet id"() {
 		given:
-		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [doApiKey: 'abc123'])
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [apiKey: 'abc123'])
 		Workload workload = new Workload()
 		workload.server = new ComputeServer(name: 'serv1', externalId: null, cloud: cloud)
 
@@ -94,7 +100,7 @@ class DigitalOceanProvisionProviderSpec extends Specification {
 """
 		JsonSlurper slurper = new JsonSlurper()
 		def json = slurper.parseText(responseContent)
-		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [doApiKey: 'abc123'])
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [apiKey: 'abc123'])
 		Workload workload = new Workload()
 		workload.server = new ComputeServer(name: 'serv1', externalId: 'drop1111', cloud: cloud)
 
@@ -108,7 +114,7 @@ class DigitalOceanProvisionProviderSpec extends Specification {
 
 	void "stopWorkload"() {
 		given:
-		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [doApiKey: 'abc123'])
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [apiKey: 'abc123'])
 		Workload workload = new Workload()
 		workload.server = new ComputeServer(name: 'serv1', externalId: 'drop1111', cloud: cloud)
 
@@ -116,15 +122,15 @@ class DigitalOceanProvisionProviderSpec extends Specification {
 		def resp = provider.stopWorkload(workload)
 
 		then:
-		1 * apiService.makeApiCall(_ as HttpPost, _) >> [resp: [statusLine: [statusCode: 201]], json: actionInProgressJson('shutdown')]
-		1 * apiService.checkActionComplete(_, _) >> new ServiceResponse(success: true, data: actionSuccessJson('shutdown').action)
+		1 * apiService.performDropletAction('abc123', 'drop1111', 'shutdown') >> new ServiceResponse(success: true, data: actionSuccessJson('shutdown').action)
+		1 * apiService.checkActionComplete('abc123', '1092647540') >> new ServiceResponse(success: true, data: actionSuccessJson('shutdown').action)
 		resp.success == true
 		resp.data.id == 1092647540
 	}
 
 	void "stopWorkload - no droplet id"() {
 		given:
-		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [doApiKey: 'abc123'])
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [apiKey: 'abc123'])
 		Workload workload = new Workload()
 		workload.server = new ComputeServer(name: 'serv1', externalId: null, cloud: cloud)
 
@@ -139,40 +145,23 @@ class DigitalOceanProvisionProviderSpec extends Specification {
 
 	void "stopWorkload and power off"() {
 		given:
-		String shutdownResponse = """
-{"action":{"id":1092647540,"status":"in-progress","type":"shutdown","started_at":"2020-12-16T18:06:52Z","region_slug":"nyc1"}}
-"""
-		JsonSlurper slurper = new JsonSlurper()
-		def shutdownJson = slurper.parseText(shutdownResponse)
-		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [doApiKey: 'abc123'])
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [apiKey: 'abc123'])
 		Workload workload = new Workload()
 		workload.server = new ComputeServer(name: 'serv1', externalId: 'drop1111', cloud: cloud)
 
-		when:
+		when: 'the graceful shutdown is rejected'
 		def resp = provider.stopWorkload(workload)
 
-		then:
-		1 * apiService.makeApiCall({ HttpPost post ->
-			['{"type":"shutdown"}'] == new BufferedReader(new InputStreamReader(post.entity.content, StandardCharsets.UTF_8)).collect()
-		}, _) >> [resp: [statusLine: [statusCode: 400]], json: shutdownJson]
-		1 * apiService.performDropletAction(_, [type: 'power_off'], _) >> new ServiceResponse(success: true, data: actionSuccessJson('power_off').action)
+		then: 'it falls back to a hard power off'
+		1 * apiService.performDropletAction('abc123', 'drop1111', 'shutdown') >> new ServiceResponse(success: false)
+		1 * apiService.performDropletAction('abc123', 'drop1111', 'power_off') >> new ServiceResponse(success: true, data: actionSuccessJson('power_off').action)
 		resp.success == true
 		resp.data.id == 1092647540
 	}
 
 	void "stopWorkload and power off - fail"() {
 		given:
-		String shutdownResponse = """
-{"action":{"id":1092647540,"status":"in-progress","type":"shutdown","started_at":"2020-12-16T18:06:52Z","region_slug":"nyc1"}}
-"""
-
-		String powerOffResponse = """
-{"action":{"id":1092647540,"status":"failed","type":"shutdown","started_at":"2020-12-16T18:06:52Z","region_slug":"nyc1"}}
-"""
-		JsonSlurper slurper = new JsonSlurper()
-		def shutdownJson = slurper.parseText(shutdownResponse)
-		def powerOffJson = slurper.parseText(powerOffResponse)
-		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [doApiKey: 'abc123'])
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [apiKey: 'abc123'])
 		Workload workload = new Workload()
 		workload.server = new ComputeServer(name: 'serv1', externalId: 'drop1111', cloud: cloud)
 
@@ -180,16 +169,14 @@ class DigitalOceanProvisionProviderSpec extends Specification {
 		def resp = provider.stopWorkload(workload)
 
 		then:
-		1 * apiService.makeApiCall({ HttpPost post ->
-			['{"type":"shutdown"}'] == new BufferedReader(new InputStreamReader(post.entity.content, StandardCharsets.UTF_8)).collect()
-		}, _) >> [resp: [statusLine: [statusCode: 400]], json: shutdownJson]
-		1 * apiService.performDropletAction(_, [type: 'power_off'], _) >> new ServiceResponse(success: false)
+		1 * apiService.performDropletAction('abc123', 'drop1111', 'shutdown') >> new ServiceResponse(success: false)
+		1 * apiService.performDropletAction('abc123', 'drop1111', 'power_off') >> new ServiceResponse(success: false)
 		resp.success == false
 	}
 
 	void "runWorkload"() {
 		given:
-		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [doApiKey: 'abc123'])
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [apiKey: 'abc123'])
 		ServicePlan plan = new ServicePlan(externalId: 'plan1')
 		Workload workload = new Workload(plan: plan)
 		WorkloadRequest workloadRequest = new WorkloadRequest()
@@ -224,7 +211,8 @@ class DigitalOceanProvisionProviderSpec extends Specification {
 
 		then:
 		2 * computeServerContext.save(*_) >> Single.just(true)
-		1 * apiService.makeApiCall(_, _) >> [resp: [statusLine: [statusCode: 202]], json: createServerJson]
+		1 * apiService.createDroplet('abc123', _) >> new ServiceResponse(success: true, data: createServerJson.droplet)
+		1 * computeServerContext.get(_) >> Maybe.just(workload.server)
 		1 * cloudContext.findOrGenerateKeyPair(_) >> Single.just(new KeyPair(id: 789, externalId: 'key1'))
 		1 * provisionService.getUserConfig(_,_,_) >> Single.just(new UsersConfiguration())
 
@@ -234,7 +222,7 @@ class DigitalOceanProvisionProviderSpec extends Specification {
 
 	void "runWorkload - fail"() {
 		given:
-		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [doApiKey: 'abc123'])
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [apiKey: 'abc123'])
 		ServicePlan plan = new ServicePlan(externalId: 'plan1')
 		Workload workload = new Workload(plan: plan)
 		WorkloadRequest workloadRequest = new WorkloadRequest()
@@ -252,10 +240,10 @@ class DigitalOceanProvisionProviderSpec extends Specification {
 		then:
 		1 * computeServerContext.save(*_) >> Single.just(true)
 		1 * provisionService.getUserConfig(_,_,_) >> Single.just(new UsersConfiguration())
-		1 * apiService.makeApiCall(_, _) >> [resp: [statusLine: [statusCode: 400]], json: createServerJson]
+		1 * apiService.createDroplet('abc123', _) >> new ServiceResponse(success: false, errorCode: '400', results: [:])
 		1 * cloudContext.findOrGenerateKeyPair(_) >> Single.just(new KeyPair(id: 789, externalId: 'key1'))
 		resp.success == false
-		resp.msg == '400'
+		resp.msg == 'API error: 400'
 	}
 
 	void "runWorkload - missing apiKey"() {
@@ -278,7 +266,7 @@ class DigitalOceanProvisionProviderSpec extends Specification {
 
 	void "resizeServer"() {
 		given:
-		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [doApiKey: 'abc123'])
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [apiKey: 'abc123'])
 		Workload workload = new Workload()
 		ComputeServer server = new ComputeServer(name: 'serv1', externalId: 'drop1111', cloud: cloud)
 		workload.server = server
@@ -293,7 +281,114 @@ class DigitalOceanProvisionProviderSpec extends Specification {
 
 		then:
 		resp.success
-		1 * apiService.performDropletAction('abc123', 'drop1111', ['type': 'resize', disk: true, size: 'plan_123']) >> new ServiceResponse(success: true, data: actionSuccessJson('resize').action)
+		1 * apiService.performDropletAction('abc123', 'drop1111', 'resize', [disk: true, size: 'plan_123']) >> new ServiceResponse(success: true, data: actionSuccessJson('resize').action)
+	}
+
+	void "startServer"() {
+		given:
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [apiKey: 'abc123'])
+		ComputeServer server = new ComputeServer(name: 'serv1', externalId: 'drop1111', cloud: cloud)
+
+		when:
+		def resp = provider.startServer(server, apiService)
+
+		then:
+		1 * apiService.performDropletAction('abc123', 'drop1111', 'power_on') >> new ServiceResponse(success: true, data: actionSuccessJson('power_on').action)
+		resp.success == true
+	}
+
+	void "startServer - no droplet id"() {
+		given:
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [apiKey: 'abc123'])
+		ComputeServer server = new ComputeServer(name: 'serv1', externalId: null, cloud: cloud)
+
+		when:
+		def resp = provider.startServer(server, apiService)
+
+		then:
+		0 * apiService.performDropletAction(*_)
+		resp.success == false
+		resp.msg == 'No Droplet ID provided'
+	}
+
+	void "stopServer"() {
+		given:
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [apiKey: 'abc123'])
+		ComputeServer server = new ComputeServer(name: 'serv1', externalId: 'drop1111', cloud: cloud)
+
+		when:
+		def resp = provider.stopServer(server, apiService)
+
+		then:
+		1 * apiService.performDropletAction('abc123', 'drop1111', 'shutdown') >> new ServiceResponse(success: true, data: actionSuccessJson('shutdown').action)
+		resp.success == true
+	}
+
+	void "stopServer - shutdown fails, power off"() {
+		given:
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [apiKey: 'abc123'])
+		ComputeServer server = new ComputeServer(name: 'serv1', externalId: 'drop1111', cloud: cloud)
+
+		when:
+		def resp = provider.stopServer(server, apiService)
+
+		then:
+		1 * apiService.performDropletAction('abc123', 'drop1111', 'shutdown') >> new ServiceResponse(success: false)
+		1 * apiService.performDropletAction('abc123', 'drop1111', 'power_off') >> new ServiceResponse(success: true, data: actionSuccessJson('power_off').action)
+		resp.success == true
+	}
+
+	void "dropletToProvisionResponse"() {
+		given:
+		def droplet = [
+				id      : '1111',
+				networks: [
+						v4: [
+								[ip_address: '10.10.10.10', type: 'public'],
+								[ip_address: '192.168.0.10', type: 'private'],
+						]
+				]
+		]
+		ProvisionResponse expected = new ProvisionResponse(externalId: '1111', publicIp: '10.10.10.10', privateIp: '192.168.0.10', success:true)
+
+		when:
+		def resp = provider.dropletToProvisionResponse(droplet)
+
+		then:
+		resp.externalId == expected.externalId
+		resp.publicIp == expected.publicIp
+		resp.privateIp == expected.privateIp
+	}
+
+	void "startServer retries power_on when DigitalOcean rejects the first attempt (MORPH-3706)"() {
+		given:
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [apiKey: 'abc123'])
+		ComputeServer server = new ComputeServer(name: 'serv1', externalId: 'drop1111', cloud: cloud)
+		provider.powerOnRetryIntervalMs = 0l
+
+		when:
+		def resp = provider.startServer(server, apiService)
+
+		then:
+		2 * apiService.performDropletAction('abc123', 'drop1111', 'power_on') >>> [
+			new ServiceResponse(success: false, msg: 'droplet is locked'),
+			new ServiceResponse(success: true, data: actionSuccessJson('power_on').action)
+		]
+		resp.success == true
+	}
+
+	void "startServer reports failure after exhausting power_on retries (MORPH-3706)"() {
+		given:
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [apiKey: 'abc123'])
+		ComputeServer server = new ComputeServer(name: 'serv1', externalId: 'drop1111', cloud: cloud)
+		provider.powerOnRetryIntervalMs = 0l
+
+		when:
+		def resp = provider.startServer(server, apiService)
+
+		then:
+		3 * apiService.performDropletAction('abc123', 'drop1111', 'power_on') >> new ServiceResponse(success: false, msg: 'droplet is locked')
+		resp.success == false
 	}
 
 	def actionSuccessJson(String type) {

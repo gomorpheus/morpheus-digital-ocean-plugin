@@ -83,7 +83,7 @@ class DatacenterDatasetProvider extends AbstractDatasetProvider<ReferenceData, L
 	Observable<Map> listOptions(DatasetQuery datasetQuery) {
 		log.debug("datacenters: ${datasetQuery.parameters}")
 		List datacenters = []
-		String paramsApiKey = plugin.getAuthConfig(datasetQuery.parameters).doApiKey
+		String paramsApiKey = getPlugin().getAuthConfig(datasetQuery.parameters).doApiKey
 		Long cloudId = datasetQuery.get("zoneId")?.toLong()
 		Cloud cloud = null
 		if(cloudId) {
@@ -95,7 +95,7 @@ class DatacenterDatasetProvider extends AbstractDatasetProvider<ReferenceData, L
 
 		// check if auth config has changed and force a refresh of the datacenters
 		if(cloud) {
-			def cloudApiKey = plugin.getAuthConfig(cloud).doApiKey
+			def cloudApiKey = getPlugin().getAuthConfig(cloud).doApiKey
 			log.debug("api key: ${cloudApiKey} vs ${paramsApiKey}")
 			if(cloudApiKey != paramsApiKey && paramsApiKey?.startsWith("******") == false) {
 				log.debug("API key has changed, clearing cached datacenters")

@@ -38,6 +38,9 @@ class DigitalOceanCloudProvider implements CloudProvider {
 	DigitalOceanPlugin plugin
 	MorpheusContext morpheusContext
 
+	/** Injectable so provider behaviour can be exercised without live DigitalOcean API calls. */
+	DigitalOceanApiService apiService = new DigitalOceanApiService()
+
 	DigitalOceanCloudProvider(DigitalOceanPlugin plugin, MorpheusContext context) {
 		this.plugin = plugin
 		this.morpheusContext = context
@@ -300,7 +303,7 @@ class DigitalOceanCloudProvider implements CloudProvider {
 
 	@Override
 	ServiceResponse validate(Cloud cloud, ValidateCloudRequest validateCloudRequest) {
-		DigitalOceanApiService apiService = new DigitalOceanApiService()
+		DigitalOceanApiService apiService = this.apiService
 		log.debug("validating Cloud: ${cloud.code}, ${validateCloudRequest.credentialType} ${validateCloudRequest.credentialUsername} ${validateCloudRequest.credentialPassword}")
 		if (!cloud.configMap.datacenter) {
 			return new ServiceResponse(success: false, msg: 'Choose a datacenter')
@@ -338,7 +341,7 @@ class DigitalOceanCloudProvider implements CloudProvider {
 
 	@Override
 	ServiceResponse initializeCloud(Cloud cloud) {
-		DigitalOceanApiService apiService = new DigitalOceanApiService()
+		DigitalOceanApiService apiService = this.apiService
 		ServiceResponse serviceResponse
 		log.debug("Initializing Cloud: ${cloud.code}")
 		log.debug("config: ${cloud.configMap}")
@@ -377,7 +380,7 @@ class DigitalOceanCloudProvider implements CloudProvider {
 	ServiceResponse refresh(Cloud cloud, DigitalOceanApiService apiService=null) {
 		def rtn = ServiceResponse.prepare()
 		log.debug("Short refresh cloud ${cloud.code}")
-		apiService = apiService ?: new DigitalOceanApiService()
+		apiService = apiService ?: this.apiService
 		String apiKey = plugin.getAuthConfig(cloud).doApiKey
 		ServiceResponse testResult = apiService.testConnection(apiKey)
 		if(!cloud.getConfigProperty('enableStorageTypeSelection')){
@@ -409,7 +412,7 @@ class DigitalOceanCloudProvider implements CloudProvider {
 	@Override
 	void refreshDaily(Cloud cloud, DigitalOceanApiService apiService=null) {
 		log.debug("daily refresh cloud ${cloud.code}")
-		apiService = apiService ?: new DigitalOceanApiService()
+		apiService = apiService ?: this.apiService
 		def syncDate = new Date()
 		String apiKey = plugin.getAuthConfig(cloud).doApiKey
 		ServiceResponse testResult = apiService.testConnection(apiKey)
@@ -440,7 +443,7 @@ class DigitalOceanCloudProvider implements CloudProvider {
 
 	@Override
 	ServiceResponse startServer(ComputeServer computeServer, DigitalOceanApiService apiService=null) {
-		apiService = apiService ?: new DigitalOceanApiService()
+		apiService = apiService ?: this.apiService
 		String dropletId = computeServer.externalId
 		String apiKey = plugin.getAuthConfig(computeServer.cloud).doApiKey
 		log.debug("startServer: ${dropletId}")
@@ -453,7 +456,7 @@ class DigitalOceanCloudProvider implements CloudProvider {
 
 	@Override
 	ServiceResponse stopServer(ComputeServer computeServer, DigitalOceanApiService apiService=null) {
-		apiService = apiService ?: new DigitalOceanApiService()
+		apiService = apiService ?: this.apiService
 		String dropletId = computeServer.externalId
 		String apiKey = plugin.getAuthConfig(computeServer.cloud).doApiKey
 		log.debug("stopServer: ${dropletId}")
@@ -466,7 +469,7 @@ class DigitalOceanCloudProvider implements CloudProvider {
 
 	@Override
 	ServiceResponse deleteServer(ComputeServer computeServer, DigitalOceanApiService apiService=null) {
-		apiService = apiService ?: new DigitalOceanApiService()
+		apiService = apiService ?: this.apiService
 		String dropletId = computeServer.externalId
 		String apiKey = plugin.getAuthConfig(computeServer.cloud).doApiKey
 		log.debug("deleteServer: ${dropletId}")
@@ -483,7 +486,7 @@ class DigitalOceanCloudProvider implements CloudProvider {
 	}
 
 	KeyPair findOrUploadKeypair(String apiKey, String publicKey, String keyName, DigitalOceanApiService apiService=null) {
-		apiService = apiService ?: new DigitalOceanApiService()
+		apiService = apiService ?: this.apiService
 		KeyPair rtn = null
 		Map match = null
 		keyName = keyName ?: 'morpheus_do_plugin_key'
