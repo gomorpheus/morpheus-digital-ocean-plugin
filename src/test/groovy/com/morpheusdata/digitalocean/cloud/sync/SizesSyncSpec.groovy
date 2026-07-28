@@ -100,8 +100,8 @@ class SizesSyncSpec extends Specification {
 		expected == service.getNameForSize(sizeData)
 
 		where:
-		sizeData                                 | expected
-		[vcpus: 1, memory: 25, disk: 25]         | 'Plugin Droplet 1 CPU, 25 MB Memory, 25 GB Storage'
-		[vcpus: 3, memory: 25 * 1024, disk: 500] | 'Plugin Droplet 3 CPU, 25 GB Memory, 500 GB Storage'
+		sizeData                                                                | expected
+		[description: 'Plugin Droplet', vcpus: 1, memory: 25, disk: 25]          | 'Plugin Droplet 1 CPU, 25 MB Memory, 25 GB Storage'
+		[description: 'Plugin Droplet', vcpus: 3, memory: 25 * 1024, disk: 500]  | 'Plugin Droplet 3 CPU, 25 GB Memory, 500 GB Storage'
 	}
 }

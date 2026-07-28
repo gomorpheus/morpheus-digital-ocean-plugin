@@ -125,7 +125,7 @@ class DigitalOceanSnapshotProvider extends AbstractMorpheusBackupTypeProvider {
 		log.debug("Executing backup {} with result {}", backup.id, backupResult.id)
 		ServiceResponse<BackupExecutionResponse> rtn = ServiceResponse.prepare(new BackupExecutionResponse(backupResult))
 
-		String apiKey = plugin.getAuthConfig(cloud).doApiKey
+		String apiKey = getPlugin().getAuthConfig(cloud).doApiKey
 		String dropletId = computeServer.externalId
 
 		def statusMap = [backupResultId: backupResult.id, success: false, backupSizeInMb: 0, providerType:'digitalocean', config: []]
@@ -169,11 +169,11 @@ class DigitalOceanSnapshotProvider extends AbstractMorpheusBackupTypeProvider {
 			ComputeServer computeServer
 			def cloudId = backupResult.zoneId ?: backupResult.backup?.zoneId
 			if(cloudId) {
-				Cloud cloud = plugin.morpheus.cloud.getCloudById(cloudId).blockingGet()
+				Cloud cloud = getPlugin().morpheus.cloud.getCloudById(cloudId).blockingGet()
 				def computeServerId = backupResult.serverId ?: backupResult.backup?.computeServerId
 				if(computeServerId) {
 					computeServer = getPlugin().morpheus.computeServer.get(computeServerId).blockingGet()
-					String apiKey = plugin.getAuthConfig(cloud).doApiKey
+					String apiKey = getPlugin().getAuthConfig(cloud).doApiKey
 					String actionId = backupResult.internalId ?: backupResult.getConfigProperty("backupRequestId")?.toString()
 					String snapshotName = backupResult.backupName
 
@@ -258,7 +258,7 @@ class DigitalOceanSnapshotProvider extends AbstractMorpheusBackupTypeProvider {
 	ServiceResponse getSnapshot(Cloud cloud, ComputeServer computeServer, String snapshotName, DigitalOceanApiService apiService=null){
 		apiService = apiService ?: new DigitalOceanApiService()
 		def rtn = ServiceResponse.prepare()
-		String apiKey = plugin.getAuthConfig(cloud).doApiKey
+		String apiKey = getPlugin().getAuthConfig(cloud).doApiKey
 		def dropletId = computeServer.externalId
 		def snapshotResults = apiService.listDropletSnapshots(apiKey, dropletId)
 		if(snapshotResults.success){
@@ -284,9 +284,9 @@ class DigitalOceanSnapshotProvider extends AbstractMorpheusBackupTypeProvider {
 			def cloudId = backupResult.zoneId ?: backupResult.backup?.zoneId
 			log.debug("deleteBackupResult zoneId: ${cloudId}, snapshotId: ${snapshotId}")
 			if(snapshotId && cloudId) {
-				Cloud cloud = plugin.morpheus.cloud.getCloudById(cloudId).blockingGet()
+				Cloud cloud = getPlugin().morpheus.cloud.getCloudById(cloudId).blockingGet()
 				if(cloud) {
-					String apiKey = plugin.getAuthConfig(cloud).doApiKey
+					String apiKey = getPlugin().getAuthConfig(cloud).doApiKey
 					def resp = apiService.deleteSnapshot(apiKey, snapshotId)
 					log.debug("Delete snapshot resp: ${resp}")
 					if(resp.success || resp.errorCode == '404') { //ignore snapshots already removed
@@ -357,13 +357,13 @@ class DigitalOceanSnapshotProvider extends AbstractMorpheusBackupTypeProvider {
 			def snapshotId = backupResult.externalId ?: config.snapshotId
 			def dropletId = config.dropletId
 			if(snapshotId && dropletId) {
-				def tragetWorkload = plugin.morpheus.workload.get(opts?.containerId ?: backupResult.containerId).blockingGet()
+				def tragetWorkload = getPlugin().morpheus.workload.get(opts?.containerId ?: backupResult.containerId).blockingGet()
 				ComputeServer computeServer = tragetWorkload.server
 				if (computeServer?.externalId) {
 					dropletId = computeServer.externalId
 				}
 				Cloud cloud = computeServer.cloud
-				def apiKey = plugin.getAuthConfig(cloud).doApiKey
+				def apiKey = getPlugin().getAuthConfig(cloud).doApiKey
 				def restoreResults = apiService.restoreSnapshot(apiKey, dropletId, snapshotId)
 				log.debug("restore results: ${restoreResults}")
 				if(restoreResults.success){
@@ -399,10 +399,10 @@ class DigitalOceanSnapshotProvider extends AbstractMorpheusBackupTypeProvider {
 		ServiceResponse<BackupRestoreResponse> rtn = ServiceResponse.prepare(new BackupRestoreResponse(backupRestore))
 		def actionId = backupRestore.externalStatusRef
 		if(actionId) {
-			def sourceWorkload = plugin.morpheus.workload.get(backupResult.containerId).blockingGet()
+			def sourceWorkload = getPlugin().morpheus.workload.get(backupResult.containerId).blockingGet()
 			def computeServer = sourceWorkload.server
 			def cloud = computeServer.cloud
-			def apiKey = plugin.getAuthConfig(cloud).doApiKey
+			def apiKey = getPlugin().getAuthConfig(cloud).doApiKey
 			def actionResults = apiService.getAction(apiKey, actionId)
 			if(actionResults.success && actionResults.data){
 				def action = actionResults.data
