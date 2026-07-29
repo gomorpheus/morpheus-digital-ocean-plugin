@@ -305,6 +305,37 @@ resource "os-type-image" "digitalocean-image-morpheus-debian-12" {
   }
 }
 
+resource "virtual-image" "digitalocean-image-morpheus-debian-13" {
+  code               = "digitalocean.image.morpheus.debian.13"
+  category           = "digitalocean.image.morpheus"
+  sshUsername        = "root"
+  sshPassword        = null
+  name               = "Debian 13 (Digital Ocean Marketplace)"
+  imageType          = "qcow2"
+  virtualImageType   = "qcow2"
+  systemImage        = true
+  isPublic           = true
+  installAgent       = true
+  computeServerImage = true
+  isCloudInit        = true
+  externalId         = "debian-13-x64"
+  osType = {
+     code = "debian.13.64"
+     owner = null
+  }
+}
+
+resource "os-type-image" "digitalocean-image-morpheus-debian-13" {
+  code               = "digitalocean.image.morpheus.debian.13"
+  provisionType      = "digitalocean"
+  virtualImage       = virtual-image.digitalocean-image-morpheus-debian-13
+  account            = null
+  osType = {
+     code = "debian.13.64"
+     owner = null
+  }
+}
+
 resource "virtual-image" "digitalocean-image-morpheus-centos-7_3" {
   code               = "digitalocean.image.morpheus.centos.7.3"
   category           = "digitalocean.image.morpheus"
