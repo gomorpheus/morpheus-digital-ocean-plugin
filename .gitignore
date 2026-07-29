@@ -9,6 +9,14 @@
 # "temporary" build files
 /target
 
+.hero
+.claude
+.gitattributes
+.github
+.mcp.json
+AGENTS.md
+CLAUDE.md
+
 build/
 .gradle
 .DS_Store
