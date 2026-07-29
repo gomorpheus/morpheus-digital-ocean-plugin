@@ -6,21 +6,8 @@
 
 # Hero Ready Queue
 
-_Generated: 2026-07-29T17:24:25Z · 1 ready spec_
+_Generated: 2026-07-29T17:25:29Z · 0 ready specs_
 
-## debian-12-marketplace-image-stale — DigitalOcean Provisioning – Seeded Debian 12 Image Invalid, Droplet Creation Fails (422)
-_bug · triaging · horizon: now_
+Queue is empty — every open spec is either blocked or has no `## Kickoff` section to surface.
 
-DigitalOcean removed the `debian-12-x64` marketplace slug, so the seeded "Debian 12 / DigitalOcean VM" layout in this plugin points at a dead image and every provision 422s.
-
-**Status:** triaging — root cause confirmed, fix not yet applied (diagnosis only, per debug-investigator scope).
-
-**Pick up at:** Add a `digital-ocean-debian-13.scribe` (workload-type/workload-type-set/instance-type-layout/scale-action) mirroring `digital-ocean-debian-12.scribe`, add a `digitalocean-image-morpheus-debian-13` virtual-image + os-type-image block in `digital-ocean-virtual-images.scribe` with `externalId = "debian-13-x64"`, and disable the Debian 12 layout (`enabled = false`, `creatable = false`) the same way Debian 11 was disabled.
-
-→ `.hero/planning/bugs/debian-12-marketplace-image-stale/spec.md`
-
-**Files:**
-- `src/main/resources/scribe/digital-ocean-debian-12.scribe:38-64` (layout to disable)
-- `src/main/resources/scribe/digital-ocean-virtual-images.scribe:277-303` (debian-12 virtual-image/os-type-image block, template for debian-13)
-- `src/main/resources/scribe/digital-ocean-debian-11.scribe` (disable-only precedent, commit f92f1da)
-- commit `100e49361a686f4e064e3d9f4a4cd192e2a7c4c3` (add-new-version precedent for Debian 12)
+Run `hero list --blocked` to see what's waiting on dependencies, or `hero check` to find specs missing kickoff sections.

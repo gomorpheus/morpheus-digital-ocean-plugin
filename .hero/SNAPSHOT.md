@@ -1,6 +1,6 @@
 # Project Snapshot — morpheus-digital-ocean-plugin
 
-_Last refreshed: 2026-07-29T17:24:25Z · projected from 17 source nodes_
+_Last refreshed: 2026-07-29T17:25:29Z · projected from 17 source nodes_
 
 ## Surfaces
 
@@ -18,7 +18,7 @@ _None._
 
 ## Recently completed (last 14 days)
 
-_Nothing recent._
+- **(unassigned)** — debian-12-marketplace-image-stale
 
 ## Next up across surfaces
 
