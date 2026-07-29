@@ -33,7 +33,10 @@ resource "compute-type-layout" "kubernetes-1_35-ubuntu-24_04-digitalocean-amd64-
     "kubernetes-rook-1-15-0-package",
     "kubernetes-fluentbit-3-0-7-package",
     "kubernetes-prometheus-0-12-package",
-    "kubernetes-nginx-ingress-operator-1-12-1-package"
+    "kubernetes-gateway-api-1-5-1-package"
+  ]
+  optionalPackages = [
+    "kubernetes-envoy-gateway-1-8-controller-package"
   ]
 }
 
@@ -72,7 +75,10 @@ resource "compute-type-layout" "kubernetes-1_35-ubuntu-24_04-digitalocean-amd64"
     "kubernetes-rook-1-15-0-package",
     "kubernetes-fluentbit-3-0-7-package",
     "kubernetes-prometheus-0-12-package",
-    "kubernetes-nginx-ingress-operator-1-12-1-package"
+    "kubernetes-gateway-api-1-5-1-package"
+  ]
+  optionalPackages = [
+    "kubernetes-envoy-gateway-1-8-controller-package"
   ]
 }
 
@@ -111,7 +117,10 @@ resource "compute-type-layout" "kubernetes-1_34-ubuntu-24_04-digitalocean-amd64-
     "kubernetes-rook-1-15-0-package",
     "kubernetes-fluentbit-3-0-7-package",
     "kubernetes-prometheus-0-12-package",
-    "kubernetes-nginx-ingress-operator-1-12-1-package"
+    "kubernetes-gateway-api-1-5-1-package"
+  ]
+  optionalPackages = [
+    "kubernetes-envoy-gateway-1-8-controller-package"
   ]
 }
 
@@ -150,7 +159,10 @@ resource "compute-type-layout" "kubernetes-1_34-ubuntu-24_04-digitalocean-amd64"
     "kubernetes-rook-1-15-0-package",
     "kubernetes-fluentbit-3-0-7-package",
     "kubernetes-prometheus-0-12-package",
-    "kubernetes-nginx-ingress-operator-1-12-1-package"
+    "kubernetes-gateway-api-1-5-1-package"
+  ]
+  optionalPackages = [
+    "kubernetes-envoy-gateway-1-8-controller-package"
   ]
 }
 
@@ -189,7 +201,10 @@ resource "compute-type-layout" "kubernetes-1_33-ubuntu-24_04-digitalocean-amd64-
     "kubernetes-rook-1-15-0-package",
     "kubernetes-fluentbit-3-0-7-package",
     "kubernetes-prometheus-0-12-package",
-    "kubernetes-nginx-ingress-operator-1-12-1-package"
+    "kubernetes-gateway-api-1-5-1-package"
+  ]
+  optionalPackages = [
+    "kubernetes-envoy-gateway-1-8-controller-package"
   ]
 }
 
@@ -228,7 +243,10 @@ resource "compute-type-layout" "kubernetes-1_33-ubuntu-24_04-digitalocean-amd64"
     "kubernetes-rook-1-15-0-package",
     "kubernetes-fluentbit-3-0-7-package",
     "kubernetes-prometheus-0-12-package",
-    "kubernetes-nginx-ingress-operator-1-12-1-package"
+    "kubernetes-gateway-api-1-5-1-package"
+  ]
+  optionalPackages = [
+    "kubernetes-envoy-gateway-1-8-controller-package"
   ]
 }
 
