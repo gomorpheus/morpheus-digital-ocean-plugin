@@ -312,6 +312,58 @@ class DigitalOceanProvisionProviderSpec extends Specification {
 		slurper.parseText(responseContent)
 	}
 
+	void "startServer"() {
+		given:
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [doApiKey: 'abc123'])
+		ComputeServer computeServer = new ComputeServer(name: 'serv1', externalId: 'drop1111', cloud: cloud)
+
+		when:
+		def resp = provider.startServer(computeServer)
+
+		then:
+		1 * apiService.performDropletAction('abc123', 'drop1111', 'power_on') >> new ServiceResponse(success: true, data: actionSuccessJson('power_on').action)
+		resp.success == true
+	}
+
+	void "startServer - no droplet id"() {
+		given:
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [doApiKey: 'abc123'])
+		ComputeServer computeServer = new ComputeServer(name: 'serv1', externalId: null, cloud: cloud)
+
+		when:
+		def resp = provider.startServer(computeServer)
+
+		then:
+		0 * apiService.performDropletAction(_, _, _)
+		resp.success == false
+	}
+
+	void "stopServer"() {
+		given:
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [doApiKey: 'abc123'])
+		ComputeServer computeServer = new ComputeServer(name: 'serv1', externalId: 'drop1111', cloud: cloud)
+
+		when:
+		def resp = provider.stopServer(computeServer)
+
+		then:
+		1 * apiService.performDropletAction('abc123', 'drop1111', 'shutdown') >> new ServiceResponse(success: true, data: actionSuccessJson('shutdown').action)
+		resp.success == true
+	}
+
+	void "stopServer - no droplet id"() {
+		given:
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [doApiKey: 'abc123'])
+		ComputeServer computeServer = new ComputeServer(name: 'serv1', externalId: null, cloud: cloud)
+
+		when:
+		def resp = provider.stopServer(computeServer)
+
+		then:
+		0 * apiService.performDropletAction(_, _, _)
+		resp.success == false
+	}
+
 	void "optionTypes"() {
 		when:
 		def options = provider.optionTypes

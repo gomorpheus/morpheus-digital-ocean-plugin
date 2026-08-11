@@ -78,13 +78,34 @@ class DigitalOceanProvisionProvider extends AbstractProvisionProvider implements
 	}
 
 	@Override
-	ServiceResponse startServer(ComputeServer computeServer) {
-		return ServiceResponse.success()
+	ServiceResponse startServer(ComputeServer computeServer, DigitalOceanApiService apiService=null) {
+		// MORPH-3513: this used to be a no-op stub that always reported success without ever
+		// power-cycling the droplet, so a restart request would report success while the VM
+		// was never actually started. Call the real DigitalOcean API instead, matching startWorkload above.
+		apiService = apiService ?: new DigitalOceanApiService()
+		String dropletId = computeServer.externalId
+		String apiKey = plugin.getAuthConfig(computeServer.cloud).doApiKey
+		log.debug("startServer: ${dropletId}")
+		if (!dropletId) {
+			log.debug("no Droplet ID provided")
+			return new ServiceResponse(success: false, msg: 'No Droplet ID provided')
+		}
+		return apiService.performDropletAction(apiKey, dropletId, 'power_on')
 	}
 
 	@Override
-	ServiceResponse stopServer(ComputeServer computeServer) {
-		return ServiceResponse.success()
+	ServiceResponse stopServer(ComputeServer computeServer, DigitalOceanApiService apiService=null) {
+		// MORPH-3513: see startServer above - call the real DigitalOcean API instead of
+		// unconditionally reporting success.
+		apiService = apiService ?: new DigitalOceanApiService()
+		String dropletId = computeServer.externalId
+		String apiKey = plugin.getAuthConfig(computeServer.cloud).doApiKey
+		log.debug("stopServer: ${dropletId}")
+		if (!dropletId) {
+			log.debug("no Droplet ID provided")
+			return new ServiceResponse(success: false, msg: 'No Droplet ID provided')
+		}
+		return apiService.performDropletAction(apiKey, dropletId, 'shutdown')
 	}
 
 	@Override
