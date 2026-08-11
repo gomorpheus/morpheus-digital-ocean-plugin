@@ -314,11 +314,11 @@ class DigitalOceanProvisionProviderSpec extends Specification {
 
 	void "startServer"() {
 		given:
-		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [doApiKey: 'abc123'])
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [apiKey: 'abc123'])
 		ComputeServer computeServer = new ComputeServer(name: 'serv1', externalId: 'drop1111', cloud: cloud)
 
 		when:
-		def resp = provider.startServer(computeServer)
+		def resp = provider.startServer(computeServer, apiService)
 
 		then:
 		1 * apiService.performDropletAction('abc123', 'drop1111', 'power_on') >> new ServiceResponse(success: true, data: actionSuccessJson('power_on').action)
@@ -327,11 +327,11 @@ class DigitalOceanProvisionProviderSpec extends Specification {
 
 	void "startServer - no droplet id"() {
 		given:
-		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [doApiKey: 'abc123'])
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [apiKey: 'abc123'])
 		ComputeServer computeServer = new ComputeServer(name: 'serv1', externalId: null, cloud: cloud)
 
 		when:
-		def resp = provider.startServer(computeServer)
+		def resp = provider.startServer(computeServer, apiService)
 
 		then:
 		0 * apiService.performDropletAction(_, _, _)
@@ -340,11 +340,11 @@ class DigitalOceanProvisionProviderSpec extends Specification {
 
 	void "stopServer"() {
 		given:
-		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [doApiKey: 'abc123'])
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [apiKey: 'abc123'])
 		ComputeServer computeServer = new ComputeServer(name: 'serv1', externalId: 'drop1111', cloud: cloud)
 
 		when:
-		def resp = provider.stopServer(computeServer)
+		def resp = provider.stopServer(computeServer, apiService)
 
 		then:
 		1 * apiService.performDropletAction('abc123', 'drop1111', 'shutdown') >> new ServiceResponse(success: true, data: actionSuccessJson('shutdown').action)
@@ -353,11 +353,11 @@ class DigitalOceanProvisionProviderSpec extends Specification {
 
 	void "stopServer - no droplet id"() {
 		given:
-		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [doApiKey: 'abc123'])
+		Cloud cloud = new Cloud(name: 'Digital Ocean', configMap: [apiKey: 'abc123'])
 		ComputeServer computeServer = new ComputeServer(name: 'serv1', externalId: null, cloud: cloud)
 
 		when:
-		def resp = provider.stopServer(computeServer)
+		def resp = provider.stopServer(computeServer, apiService)
 
 		then:
 		0 * apiService.performDropletAction(_, _, _)
